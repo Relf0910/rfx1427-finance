@@ -172,29 +172,41 @@ Do NOT force-fill report.
 
 ---
 
-## PHASE 2 — OUTPUT FORMAT (LOCKED)
+# PHASE 2 — DEEP ANALYSIS (LOCKED FORMAT)
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
-### PHASE 2 — DEEP ANALYSIS
+Output must begin with:
 
-#### 1. Primary Data Summary
+```markdown
+**PHASE 2 — DEEP ANALYSIS**
+Primary Tool: **[Google Finance / Finviz / MarketBeat]**
+Akses: [DATE TIME]
+```
+
+Then the four mandatory blocks in this order:
+
+### 1. Primary Data Summary
 
 ```markdown
 | Ticker | Company | Primary Tool | Fetch Status |
 |--------|---------|--------------|--------------|
-| XXX | [Name] | [Tool] | SUCCESS / BLOCKED / UNVERIFIED |
+| Stock X | [Name] | [Tool] | SUCCESS / BLOCKED / UNVERIFIED |
+| Stock Y | [Name] | [Tool] | SUCCESS / BLOCKED / UNVERIFIED |
 ```
 
-#### 2. Catalyst Verification
+### 2. Catalyst Verification
 
 ```markdown
 | Ticker | Phase 1 Catalyst | Verified | Notes |
 |--------|------------------|----------|-------|
-| XXX | [Description] | YES / PARTIAL / NO | [Notes] |
+| Stock X | [Short description] | YES / PARTIAL / NO | [Notes] |
+| Stock Y | [Short description] | YES / PARTIAL / NO | [Notes] |
 ```
 
-#### 3. Deep Analysis Reports
+### 3. Deep Analysis Reports
+
+For each ticker that passed the confidence gate, output:
 
 ```markdown
 ## [TICKER] — [COMPANY]
@@ -202,53 +214,48 @@ STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 | Field | Value |
 |-------|-------|
 | **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
-| Primary Tool | [Google Finance / Finviz / MarketBeat] |
+| Primary Tool | [Tool] |
 | Direction | **POSITIVE** / NEUTRAL / NEGATIVE |
 
 ### Catalyst
-[Factual summary with labels: FACT / INFERENCE / ESTIMATE]
+[Factual summary with FACT / INFERENCE / ESTIMATE labels]
 
 ### Timing Fit
 **Strong** / Partial / Poor (matched to [Profile])
 
 ### Relevant Levels
-- [Level 1]: [Value]
-- [Level 2]: [Value]
+- [Level description]: [Value or NOT AVAILABLE]
+- [Level description]: [Value or NOT AVAILABLE]
 
 ### Confidence
 **HIGH** / MEDIUM
 
 ### Risk / Uncertainty
-[Any identified risks or uncertainties]
+[Short risk note]
 
 ---
 ```
 
-#### 4. Ranking Summary
+### 4. Ranking Summary
 
 ```markdown
-## RANKING SUMMARY
-
 | Rank | Ticker | Direction | Confidence | Timing Fit |
 |------|--------|-----------|------------|------------|
-| 1 | XXX | POSITIVE | HIGH | Strong |
-| 2 | XXX | NEUTRAL | MEDIUM | Partial |
+| 1 | Stock X | POSITIVE | HIGH | Strong |
+| 2 | Stock Y | NEGATIVE | MEDIUM | Partial |
 ```
 
----
-
-## STOP 2
-
-After Phase 2 report:
+End Phase 2 with exactly:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Do NOT proceed to Phase 3 automatically.
+## Hard Rules for Phase 2
 
-User options at STOP 2:
-- Opt-in to Phase 3 (SEC EDGAR Verification)
-- Request Phase 4 (Weekly Bias Summary)
-- Skip → END
+1. Never skip a required table or section
+2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
+3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+4. Keep the exact markdown structure, bold labels, and stop phrases shown above
+5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

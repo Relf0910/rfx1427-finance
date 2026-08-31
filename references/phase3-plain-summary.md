@@ -4,11 +4,11 @@ Source: Framework v3.1
 
 ## Overview
 
-Phase 4 provides a plain, non-technical summary of opportunities with weekly bias direction. This is the final phase before END.
+Phase 4 provides weekly bias summary with locked format.
 
 **Phase 4 is: USER REQUEST ONLY**
 
-**Output Style: LOCKED FORMAT**
+Trigger: "Summary" / "Phase 4" / "Weekly bias"
 
 ## PHASE 4 — RULES (MANDATORY)
 
@@ -25,89 +25,68 @@ Phase 4 provides a plain, non-technical summary of opportunities with weekly bia
 6. **MUST have NO MONITORING disclaimer**
 7. **Do NOT add anything outside this format**
 
-## When Phase 4 is Triggered
-
-Trigger keywords:
-- "Ringkasan"
-- "Summary"
-- "Phase 4"
-- "Weekly bias"
-- "Fasa 4"
-
-Phase 4 available after:
-- Phase 2 completed (if user requests)
-- Phase 3 completed or bypassed
-
-## Bias Categories & Tags
-
-| Bias | Tag | Meaning |
-|------|-----|---------|
-| **POSITIVE** | PREPARE FOR VOLUME BUY | Catalysts identified that may support upside |
-| **NEGATIVE** | BE CAREFUL — MARKET CRASH RISK | Catalysts identified that may pressure downside |
-| **NEUTRAL** | WAIT FOR CONFIRMATION | No clear directional catalyst |
-
 ---
 
-## PHASE 4 — OUTPUT FORMAT (LOCKED)
+# PHASE 4 — WEEKLY BIAS SUMMARY (LOCKED FORMAT)
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
+
+This phase is user-request only. Output must follow this structure with zero additions:
 
 ```markdown
-# WEEKLY BIAS SUMMARY — [DATE]
-Language: [English / Bahasa Melayu]
+**PHASE 4 — WEEKLY BIAS SUMMARY**
 
----
-
-## CARD [#1] — [TICKER]
-
-| Field | Value |
-|-------|-------|
-| Company | [COMPANY NAME] |
-| Direction | **POSITIVE** / NEGATIVE / NEUTRAL |
-| Est. Range | [+X% to +Y%] / [-X% to -Y%] / N/A |
-| Reason | [Max 10 words factual reason] |
-| Tag | **PREPARE FOR VOLUME BUY** / BE CAREFUL — MARKET CRASH RISK / WAIT FOR CONFIRMATION |
-
-### Key Points
-- [Point 1 — FACT / INFERENCE]
-- [Point 2 — FACT / INFERENCE]
-
-### Source
-[Source name] | SEC: [Verified / Unverified / N/A]
-
----
+| Saham | Arah | Anggaran % | Reason (max 10 words) |
+|-------|------|------------|-----------------------|
+| Stock X | Positive | +3% to +8% | [max 10 words] |
+| Stock Y | Negative | -5% to -12% | [max 10 words] |
 ```
 
-**Repeat for each opportunity**
+Allowed directions only: Positive / Negative / Neutral.
+Anggaran % must be a range.
+Reason must not exceed 10 words.
 
----
-
-## END OF SESSION TABLE
+Then:
 
 ```markdown
-## END OF SESSION
+### Penjelasan Ringkas + Tag
 
-| Ticker | Direction | Est. Range | Tag |
-|--------|-----------|------------|-----|
-| XXX | **POSITIVE** | +X% to +Y% | PREPARE FOR VOLUME BUY |
-| XXX | NEGATIVE | -X% to -Y% | BE CAREFUL — MARKET CRASH RISK |
-| XXX | NEUTRAL | N/A | WAIT FOR CONFIRMATION |
+**Stock X**
+Arah Positive. [One short sentence].
+`PREPARE FOR VOLUME BUY`
 
----
+**Stock Y**
+Arah Negative. [One short sentence].
+`BE CAREFUL — MARKET CRASH RISK`
+```
 
+(Use `WAIT FOR CONFIRMATION` for Neutral.)
+
+Then the mandatory closing table:
+
+```markdown
+### END OF SESSION
+
+| Ticker | Final Bias | Tag |
+|--------|------------|-----|
+| Stock X | Positive | PREPARE FOR VOLUME BUY |
+| Stock Y | Negative | BE CAREFUL — MARKET CRASH RISK |
+```
+
+Finally, output exactly this disclaimer block and nothing after it:
+
+```markdown
 **NO MONITORING**
-
-This session has ended. No watchlist, no alerts, no continuous monitoring.
-Each session starts fresh.
-
----
+Ini adalah ringkasan bias berdasarkan analisis Fasa 1–3 sahaja.
+Bukan nasihat pelaburan.
+Tiada pemantauan berterusan.
+Sesi tamat.
 ```
 
----
+## Hard Rules for Phase 4
 
-After Phase 4 output:
-```text
-END
-```
-
-No loop. No monitoring. No additional phases.
+1. Never skip a required table or section
+2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
+3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+4. Keep the exact markdown structure, bold labels, and stop phrases shown above
+5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

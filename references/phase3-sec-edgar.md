@@ -70,55 +70,55 @@ For each ticker:
 | **VERIFIED** | SEC filing confirms the data |
 | **UNVERIFIED — SEC DATA NOT AVAILABLE** | SEC data cannot be retrieved |
 
-## PHASE 3 — OUTPUT FORMAT (LOCKED)
+---
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+# PHASE 3 — SEC EDGAR VERIFICATION (LOCKED FORMAT)
 
-### PHASE 3 — SEC EDGAR VERIFICATION
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
-#### 1. Fetch Attempt
+Output must begin with:
 
 ```markdown
-| Ticker | Company | SEC Access | Fetch Status |
-|--------|---------|------------|--------------|
-| XXX | [Name] | SUCCESS / BLOCKED | VERIFIED / UNVERIFIED |
+**PHASE 3 — SEC EDGAR VERIFICATION**
+(Opt-in sahaja | Akses: [DATE TIME])
 ```
 
-#### 2. Verification Results
+### 1. Fetch Attempt
+
+```markdown
+| Ticker | Filing Diakses | Status |
+|--------|----------------|--------|
+| Stock X | 10-Q / 10-K / 8-K / 6-K | SUCCESS / UNVERIFIED |
+| Stock Y | 10-Q / 10-K / 8-K / 6-K | SUCCESS / UNVERIFIED |
+```
+
+### 2. Verification Results (per ticker)
+
+For each ticker:
 
 ```markdown
 ## [TICKER] — [COMPANY]
+**Label: VERIFIED**   or   **UNVERIFIED — SEC DATA NOT AVAILABLE**
 
-| Field | Value |
-|-------|-------|
-| **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
-| SEC Status | **VERIFIED** / UNVERIFIED — SEC DATA NOT AVAILABLE |
-| Last Filing Checked | [Filing type] on [Date] |
-
-### Verified Data
-
-| Item | SEC Value | Filing |
-|------|-----------|--------|
-| [Item 1] | [Value] | [Filing type, Date] |
-
-### Unverified Data (if any)
-
-| Item | Status |
-|------|--------|
-| [Item] | UNVERIFIED — SEC DATA NOT AVAILABLE |
-
----
+- [Key financial item]
+- [Key financial item]
+- [Shares / Cash / Debt / Material event if available]
+- **Catatan:** [One-line link back to the Phase 1 catalyst]
 ```
 
----
+After all tickers, add a one-line summary of how many were VERIFIED vs UNVERIFIED.
 
-## STOP 3
+End Phase 3 with exactly:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-User options at STOP 3:
-- Request Phase 4 (Weekly Bias Summary)
-- Skip → END
+## Hard Rules for Phase 3
+
+1. Never skip a required table or section
+2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
+3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+4. Keep the exact markdown structure, bold labels, and stop phrases shown above
+5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

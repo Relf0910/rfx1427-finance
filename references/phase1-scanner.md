@@ -157,36 +157,41 @@ Take maximum 7.
 
 ---
 
-# PHASE 1 — OUTPUT FORMAT (LOCKED)
+# PHASE 1 — MARKET SCANNER (LOCKED FORMAT)
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
-## Tables + Cards Format
+Output must begin with:
 
 ```markdown
 # MARKET SCANNER — [DATE] | Source: [SOURCE]
 
----
+Akses: [DATE TIME]
+Items scanned: N | Material calls: M | Filtered as noise: K
+```
 
-## CARD [#1] — [TICKER]
+Then for every qualifying opportunity (maximum 7), output a card in this exact structure:
+
+```markdown
+## CARD [#N] — [TICKER]
 
 | Field | Value |
 |-------|-------|
 | Company | [COMPANY NAME] |
 | Direction | **Positive** / Negative / Mixed / Neutral |
-| Materiality | ★★★☆☆ (3/5) |
+| Materiality | ★★★☆☆ (X/5) |
 | Confidence | HIGH / MEDIUM / LOW |
 | Horizon Fit | Strong / Partial / Poor |
 
 ### What Happened
-[Factual summary — FACT vs INFERENCE vs ESTIMATE clearly labeled]
+[Factual summary. Explicitly label FACT / INFERENCE / ESTIMATE where relevant]
 
 ### Why It Matters
-[Transmission mechanism explained]
+[1–3 sentences explaining the transmission mechanism for the chosen trader profile]
 
 ### Key Data
-- [Key number 1]
-- [Key number 2]
+- [Key number or fact 1]
+- [Key number or fact 2]
 - Date: [Relevant date]
 
 ### Source
@@ -195,32 +200,19 @@ STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 ---
 ```
 
-**Repeat for each opportunity (max 7)**
-
-## Restrictions
-
-Do NOT provide:
-- Buy command
-- Sell command
-- Entry instruction
-- Stop-loss instruction
-- Position sizing
-- Guaranteed target
-- Guaranteed return
-
-Phase 1 is: `NEWS → FILTER → OPPORTUNITY`
-
-## STOP 1
-
-After Phase 1 report:
+After the last card, output exactly:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Do NOT proceed to Phase 2 automatically.
+Do not proceed to Phase 2 unless the user explicitly opts in.
 
-User options at STOP 1:
-- Opt-in to Phase 2 (select primary tool)
-- Skip → END
+## Hard Rules for Phase 1
+
+1. Never skip a required table or section
+2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
+3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+4. Keep the exact markdown structure, bold labels, and stop phrases shown above
+5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets
