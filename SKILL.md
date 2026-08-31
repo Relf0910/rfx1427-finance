@@ -1,13 +1,13 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 3.1 that reads ONE user-selected news source, filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.0 that reads ONE user-selected news source, filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
-Financial News Scanner + Deep Analysis + SEC Verification + Plain Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
+Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 3.1 — Master Framework (4 Phase)
+## Version 4.0 — Master Framework (4 Phase + Locked Output Templates)
 
 ## Core Principle
 
@@ -122,6 +122,32 @@ END
 
 ---
 
+# ====================================================================
+# OUTPUT FORMAT INSTRUCTIONS — MANDATORY FOR AI
+# ====================================================================
+
+> **CRITICAL INSTRUCTION FOR THE AI:**
+>
+> Each phase below contains a **LOCKED OUTPUT TEMPLATE**.
+> You MUST reproduce the exact structure shown — same headers, same table columns,
+> same bold labels, same separator lines, same STOP phrases.
+>
+> Replace ALL placeholders (shown in `[BRACKETS]`) with real data fetched live.
+>
+> **NEVER use real ticker symbols in the template examples.**
+> The templates below use `Stock X`, `Stock Y`, `[TICKER]`, `[COMPANY]` as placeholders.
+> When producing real output, replace them with the actual fetched ticker and company name.
+>
+> **Do not add any section, paragraph, commentary, or formatting not shown in the template.**
+> **Do not remove any section, table, or label shown in the template.**
+>
+> If you do not have data for a field, write `NOT AVAILABLE`.
+> Do not leave any field blank. Do not invent data.
+>
+> These templates are the ONLY acceptable output structure for each phase.
+
+---
+
 ## Gate 0 — Intake (3 Questions)
 
 Ask ONE at a time.
@@ -151,210 +177,253 @@ Ask ONE at a time.
 | SWING | Days to weeks |
 | INVESTOR | Long-term business thesis |
 
+---
+
 ## Phase 1 — Scanner (Finviz Default)
 
-### Step 1A — News Source
+### Phase 1 Steps
 
-Ask: "What news source for today?"
-- [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
-- → If user does not choose, USE FINVIZ AS DEFAULT
+**Step 1A — News Source:** Ask user. Default = Finviz.
+**Step 1B — Fetch / Read Source:** Fetch live. Record source name, URL, access time. If blocked: `BLOCKED — SOURCE COULD NOT BE ACCESSED`
+**Step 1C — Profile Filter:** Apply trader profile. Hard rule: NO TICKER = NOISE.
+**Step 1D — Extract Facts:** Company, Ticker, What happened, Key numbers, Relevant dates, Source. Distinguish FACT vs AI INFERENCE vs ESTIMATE.
+**Step 1E — Map Opportunity:** Direction, Materiality (1-5), Confidence (High/Medium/Low), Horizon Fit (Strong/Partial/Poor), Transmission Channel.
+**Step 1F — Noise Gate:** Materiality >= 3, Confidence >= Medium, Horizon Fit != Poor, Ticker identifiable, Market relevant. Max 7.
 
-### Step 1B — Fetch / Read Source
+### Phase 1 Output — LOCKED TEMPLATE
 
-Use selected source. Record:
-- Source name
-- URL (if available)
-- Access time
+> **INSTRUCTION:** Reproduce EXACTLY this structure. Replace `[BRACKETS]` with live data. Use `Stock X`, `Stock Y` as the card numbering pattern. Do not add or remove anything.
 
-If source fails to access:
-`BLOCKED — SOURCE COULD NOT BE ACCESSED`
-Do not claim source was read. Do not invent.
+```markdown
+# MARKET SCANNER — [DATE] | Source: [SOURCE]
 
-### Step 1C — Profile Filter
+Akses: [DATE TIME (UTC+8)]
+Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 
-Use definitions:
-- SCALPER → 5-15 min catalyst
-- INTRADAY → current trading session
-- SWING → days → weeks
-- INVESTOR → long-term business thesis
+---
 
-Hard rule: NO TICKER = NOISE (discard immediately)
+## CARD [#1] — [TICKER]
 
-### Step 1D — Extract Facts
+| Field | Value |
+|-------|-------|
+| Company | [COMPANY NAME] |
+| Direction | **Positive** / Negative / Mixed / Neutral |
+| Materiality | ★★★☆☆ (X/5) |
+| Confidence | HIGH / MEDIUM / LOW |
+| Horizon Fit | Strong / Partial / Poor |
 
-For each candidate:
-- Company, Ticker
-- What happened
-- Key numbers
-- Relevant dates
-- Source
+### What Happened
+[Factual summary. Explicitly label FACT / INFERENCE / ESTIMATE where relevant]
 
-Distinguish: FACT vs AI INFERENCE vs ESTIMATE
+### Why It Matters
+[1–3 sentences explaining the transmission mechanism for the chosen trader profile]
 
-### Step 1E — Map Opportunity
+### Key Data
+- [Key number or fact 1]
+- [Key number or fact 2]
+- Date: [Relevant date]
 
-- Direction: Positive / Negative / Mixed / Neutral
-- Materiality: 1-5 (1=Minimal, 5=Very High)
-- Confidence: High / Medium / Low
-- Horizon Fit: Strong / Partial / Poor
-- Transmission Channel: NEWS → BUSINESS IMPACT → FINANCIAL/EXPECTATION → POTENTIAL PRICE IMPACT
+### Source
+[Source name] | [URL if available]
 
-### Step 1F — Noise Gate
+---
 
-Candidate must pass ALL:
-- Materiality >= 3
-- Confidence >= Medium
-- Horizon Fit != Poor
-- Ticker/company identifiable
-- Market relevant
+## CARD [#2] — [TICKER]
 
-Max 7 opportunities. If more, rank by: Materiality > Confidence > Horizon Fit > Catalyst clarity
+| Field | Value |
+|-------|-------|
+| Company | [COMPANY NAME] |
+| Direction | **Positive** / Negative / Mixed / Neutral |
+| Materiality | ★★★☆☆ (X/5) |
+| Confidence | HIGH / MEDIUM / LOW |
+| Horizon Fit | Strong / Partial / Poor |
 
-### Phase 1 Output Format — LOCKED
+### What Happened
+[Factual summary. Explicitly label FACT / INFERENCE / ESTIMATE where relevant]
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+### Why It Matters
+[1–3 sentences explaining the transmission mechanism for the chosen trader profile]
+
+### Key Data
+- [Key number or fact 1]
+- [Key number or fact 2]
+- Date: [Relevant date]
+
+### Source
+[Source name] | [URL if available]
+
+---
+
+[... repeat for each qualifying opportunity, maximum 7 cards ...]
+
+---
+
+STOP
+WAIT FOR USER
+```
+
+> After the last card, output exactly `STOP` then `WAIT FOR USER` on separate lines.
+> Do not proceed to Phase 2 unless the user explicitly opts in.
 
 ---
 
 ## Phase 2 — Deep Analysis (Primary Tool Only, NO SEC)
 
-### Overview
+### Phase 2 Steps
 
-Phase 2 uses **Primary Tool ONLY**. No SEC EDGAR in this phase.
+**Step 2A — Primary Tool Selection:** Ask user. Default = Google Finance. If Skip → END SESSION.
+**Step 2B — Fetch Primary Data:** Fetch from selected tool for EVERY Phase 1 opportunity. If blocked → `PRIMARY TOOL — BLOCKED`. If field missing → `NOT AVAILABLE`.
+**Step 2C — Analyze & Synthesize:** Verify catalyst, assess timing fit, identify price levels, apply confidence gate. If Low confidence → `LOW CONFIDENCE — SKIP`.
 
-### Step 2A — Primary Tool Selection
+### Phase 2 Output — LOCKED TEMPLATE
 
-Ask: "What primary tool for deep analysis?"
-- [Google Finance (Default)] [Finviz] [MarketBeat] [Skip]
+> **INSTRUCTION:** Reproduce EXACTLY this structure. Four mandatory blocks in this order: (1) Primary Data Summary, (2) Catalyst Verification, (3) Deep Analysis Reports, (4) Ranking Summary. Replace `[BRACKETS]` with live data. Do not add or remove anything.
 
-→ If user does not choose, USE GOOGLE FINANCE AS DEFAULT.
+```markdown
+**PHASE 2 — DEEP ANALYSIS**
+Primary Tool: **[Google Finance / Finviz / MarketBeat]**
+Akses: [DATE TIME (UTC+8)]
 
-### Step 2B — Fetch Primary Data
+---
 
-Fetch data from selected Primary Tool for every Phase 1 opportunity:
+### 1. Primary Data Summary
 
-#### GOOGLE FINANCE
-- Current price, Price change %, Recent news, Analyst targets, Analyst ratings, Earnings data
+| Ticker | Company | Primary Tool | Fetch Status |
+|--------|---------|--------------|--------------|
+| Stock X | [COMPANY NAME] | [TOOL] | SUCCESS / BLOCKED / UNVERIFIED |
+| Stock Y | [COMPANY NAME] | [TOOL] | SUCCESS / BLOCKED / UNVERIFIED |
 
-#### FINVIZ
-- Current price, Price change %, Volume, RSI, SMA 20, SMA 50, P/E, EPS, Revenue, News headlines
+---
 
-#### MARKETBEAT
-- Current price, Price change %, Short interest, Analyst consensus, Financial ratios
+### 2. Catalyst Verification
 
-### Step 2C — Analyze & Synthesize
+| Ticker | Phase 1 Catalyst | Verified | Notes |
+|--------|------------------|----------|-------|
+| Stock X | [Short description] | YES / PARTIAL / NO | [Notes] |
+| Stock Y | [Short description] | YES / PARTIAL / NO | [Notes] |
 
-For each opportunity:
-1. Verify catalyst from Phase 1
-2. Assess timing fit with trader profile
-3. Identify relevant price levels
-4. Apply confidence gate
+---
 
-### Data Rules
+### 3. Deep Analysis Reports
 
-If field not available:
-```text
-NOT AVAILABLE
-```
+## [TICKER] — [COMPANY]
 
-If primary tool fails:
-```text
-PRIMARY TOOL — BLOCKED
-```
+| Field | Value |
+|-------|-------|
+| **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
+| Primary Tool | [Tool] |
+| Direction | **POSITIVE** / NEUTRAL / NEGATIVE |
 
-### Phase 2 Output — LOCKED
+### Catalyst
+[Factual summary with FACT / INFERENCE / ESTIMATE labels]
 
-Output format: PHASE 2 — DEEP ANALYSIS
+### Timing Fit
+**Strong** / Partial / Poor (matched to [Profile])
 
-Components:
-1. Primary Data Summary
-2. Catalyst Verification
-3. Deep Analysis Reports (per ticker)
-4. Ranking Summary
+### Relevant Levels
+- [Level description]: [Value or NOT AVAILABLE]
+- [Level description]: [Value or NOT AVAILABLE]
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+### Confidence
+**HIGH** / MEDIUM
 
-### STOP 2
+### Risk / Uncertainty
+[Short risk note]
 
-After Phase 2 report:
-```text
+---
+
+[... repeat for each ticker that passed the confidence gate ...]
+
+---
+
+### 4. Ranking Summary
+
+| Rank | Ticker | Direction | Confidence | Timing Fit |
+|------|--------|-----------|------------|------------|
+| 1 | Stock X | POSITIVE | HIGH | Strong |
+| 2 | Stock Y | NEUTRAL | MEDIUM | Partial |
+
+---
+
 STOP
 WAIT FOR USER
 ```
 
-User options:
-- Opt-in to Phase 3 (SEC EDGAR Verification)
-- Request Phase 4 (Weekly Bias Summary)
-- Skip → END
+> After the Ranking Summary, output exactly `STOP` then `WAIT FOR USER` on separate lines.
+> Do not proceed to Phase 3 unless the user explicitly opts in.
 
 ---
 
 ## Phase 3 — SEC EDGAR Verification (Opt-in Only)
 
-### Overview
+### Phase 3 Steps
 
-Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly asks for SEC EDGAR verification.
+**Trigger:** User explicitly asks for SEC EDGAR verification.
+**Step 3A — Fetch SEC EDGAR Data:** For each ticker, access SEC EDGAR. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
+**Step 3B — Label Results:** VERIFIED if SEC filing confirms data. UNVERIFIED — SEC DATA NOT AVAILABLE if data cannot be retrieved.
 
-### When Phase 3 is Triggered
+### Phase 3 Output — LOCKED TEMPLATE
 
-User asks:
-- "Run SEC EDGAR Verification?"
-- "Verify with SEC"
-- "SEC verification"
+> **INSTRUCTION:** Reproduce EXACTLY this structure. Two mandatory blocks: (1) Fetch Attempt, (2) Verification Results per ticker. Replace `[BRACKETS]` with live data. Do not add or remove anything.
 
-### Step 3A — Fetch SEC EDGAR Data
+```markdown
+**PHASE 3 — SEC EDGAR VERIFICATION**
+(Opt-in sahaja | Akses: [DATE TIME (UTC+8)])
 
-For each ticker, access SEC EDGAR (sec.gov/edgar):
+---
 
-| Item | Filing |
-| --- | --- |
-| Revenue | 10-Q / 10-K |
-| Net Income / EPS | 10-Q / 10-K |
-| Total Debt | 10-Q / 10-K |
-| Cash Flow | 10-Q / 10-K |
-| Insider Transactions | Form 4 |
-| Outstanding Shares | 10-Q / 10-K |
-| Material Events | 8-K |
+### 1. Fetch Attempt
 
-### Step 3B — Label Results
+| Ticker | Filing Diakses | Status |
+|--------|----------------|--------|
+| Stock X | 10-Q / 10-K / 8-K / 6-K | SUCCESS / UNVERIFIED |
+| Stock Y | 10-Q / 10-K / 8-K / 6-K | SUCCESS / UNVERIFIED |
 
-- If data exists and verified → `VERIFIED`
-- If data not available → `UNVERIFIED — SEC DATA NOT AVAILABLE`
+---
 
-### Phase 3 Output — LOCKED
+### 2. Verification Results
 
-Output format: PHASE 3 — SEC EDGAR VERIFICATION
+## [TICKER] — [COMPANY]
+**Label: VERIFIED**   or   **UNVERIFIED — SEC DATA NOT AVAILABLE**
 
-Components:
-1. Fetch Attempt
-2. Verification Results (per ticker)
+- [Key financial item — e.g., Revenue]
+- [Key financial item — e.g., Net Income / EPS]
+- [Key financial item — e.g., Total Debt]
+- [Key financial item — e.g., Cash Flow]
+- [Key financial item — e.g., Insider Transactions]
+- [Key financial item — e.g., Outstanding Shares]
+- [Key financial item — e.g., Material Events]
+- **Catatan:** [One-line link back to the Phase 1 catalyst]
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+---
 
-### STOP 3
+[... repeat for each ticker ...]
 
-```text
+---
+
+### Ringkasan Verifikasi
+
+| Ticker | Label |
+|--------|-------|
+| Stock X | VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE |
+| Stock Y | VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE |
+
+**[N] VERIFIED | [M] UNVERIFIED**
+
+---
+
 STOP
 WAIT FOR USER
 ```
 
-User options:
-- Request Phase 4 (Weekly Bias Summary)
-- Skip → END
+> After the Ringkasan Verifikasi table, output exactly `STOP` then `WAIT FOR USER`.
+> Do not proceed to Phase 4 unless the user explicitly asks.
 
 ---
 
 ## Phase 4 — Weekly Bias Summary (LOCKED FORMAT)
 
-### Overview
-
-Phase 4 provides weekly bias summary with locked format.
-
-**Phase 4 is: USER REQUEST ONLY**
-
-Trigger: "Summary" / "Phase 4" / "Weekly bias"
-
-### PHASE 4 — RULES (MANDATORY)
+### Phase 4 Rules (MANDATORY)
 
 **THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
@@ -369,35 +438,57 @@ Trigger: "Summary" / "Phase 4" / "Weekly bias"
 6. **MUST have NO MONITORING disclaimer**
 7. **Do NOT add anything outside this format**
 
-### Phase 4 Output — LOCKED
+### Phase 4 Output — LOCKED TEMPLATE
 
-Output format: PHASE 4 — WEEKLY BIAS SUMMARY
+> **INSTRUCTION:** Reproduce EXACTLY this structure. Four mandatory components in order: (1) Summary Table, (2) Penjelasan Ringkas + Tag, (3) END OF SESSION table, (4) NO MONITORING disclaimer. Replace `[BRACKETS]` with live data. Do not add or remove anything.
 
-Components:
-1. Summary Table (Ticker/Direction/Estimate/Reason)
-2. Detailed explanation per ticker with tags
-3. END OF SESSION table
-4. NO MONITORING disclaimer
+```markdown
+**PHASE 4 — WEEKLY BIAS SUMMARY**
 
-STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
+| Saham | Arah | Anggaran % | Reason (max 10 words) |
+|-------|------|------------|-----------------------|
+| Stock X | Positive | +3% to +8% | [max 10 words] |
+| Stock Y | Negative | -5% to -12% | [max 10 words] |
 
 ---
 
-## Data Integrity Hierarchy
+### Penjelasan Ringkas + Tag
 
-```text
-OFFICIAL SEC FILING
-       ↓
-PRIMARY FINANCIAL TOOL
-       ↓
-NEWS SOURCE
-       ↓
-AI INFERENCE
-       ↓
-ESTIMATE
+**Stock X**
+Arah Positive. [One short sentence].
+`PREPARE FOR VOLUME BUY`
+
+**Stock Y**
+Arah Negative. [One short sentence].
+`BE CAREFUL — MARKET CRASH RISK`
+
+[... repeat for each stock. Use `WAIT FOR CONFIRMATION` for Neutral ...]
+
+---
+
+### END OF SESSION
+
+| Ticker | Final Bias | Tag |
+|--------|------------|-----|
+| Stock X | Positive | PREPARE FOR VOLUME BUY |
+| Stock Y | Negative | BE CAREFUL — MARKET CRASH RISK |
+
+---
+
+**NO MONITORING**
+Ini adalah ringkasan bias berdasarkan analisis Fasa 1–3 sahaja.
+Bukan nasihat pelaburan.
+Tiada pemantauan berterusan.
+Sesi tamat.
 ```
 
-## Error States Summary (Standard)
+> This is the FINAL output of the session. Do not add anything after the NO MONITORING block.
+
+---
+
+# ====================================================================
+# ERROR STATES SUMMARY (STANDARD)
+# ====================================================================
 
 | Condition | Output |
 |---|---|
@@ -411,13 +502,39 @@ ESTIMATE
 | No opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
 | Primary Tool fails | `FETCH FAILED — ANALYSIS SKIPPED` |
 
-## Opportunity Lifecycle
+---
+
+# ====================================================================
+# DATA INTEGRITY HIERARCHY
+# ====================================================================
+
+```text
+OFFICIAL SEC FILING
+       ↓
+PRIMARY FINANCIAL TOOL
+       ↓
+NEWS SOURCE
+       ↓
+AI INFERENCE
+       ↓
+ESTIMATE
+```
+
+---
+
+# ====================================================================
+# OPPORTUNITY LIFECYCLE
+# ====================================================================
 
 `NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → PHASE 1 REPORT → USER OPT-IN → PRIMARY DATA FETCH → PHASE 2 REPORT → USER OPT-IN → SEC EDGAR FETCH → PHASE 3 REPORT → USER REQUEST → PHASE 4 REPORT → END`
 
 Any hard gate fails → `STOP / SKIP`
 
-## References
+---
+
+# ====================================================================
+# REFERENCES
+# ====================================================================
 
 | Phase | File |
 |---|---|
@@ -425,31 +542,37 @@ Any hard gate fails → `STOP / SKIP`
 | Phase 1 Scanner | `references/phase1-scanner.md` |
 | Phase 2 Deep Analysis | `references/phase2-deep-analysis.md` |
 | Phase 3 SEC EDGAR Verification | `references/phase3-sec-edgar.md` |
-| Phase 4 Weekly Bias Summary | `references/phase3-plain-summary.md` |
+| Phase 4 Weekly Bias Summary | `references/phase4-weekly-bias.md` |
 | Error States | `references/error-states.md` |
 | Data Integrity Hierarchy | `references/data-integrity-hierarchy.md` |
 | Hard Rules Master | `references/hard-rules-master.md` |
 | Decision Tree | `references/decision-tree.md` |
 | Acceptance Tests | `references/acceptance-tests.md` |
 
-## Status & Controls
+---
 
-- **VERSION 3.1** — Phase 2 Primary Tool Only, Phase 3 SEC Opt-in Only
-- **Authority Gate** — Primary Tool selected by user (Google Finance / Finviz / MarketBeat / Skip). Primary Tool not selected by AI for user. SEC EDGAR is separate opt-in phase
-- **Evidence Integrity Gate** — every important claim must be supported by real data (source URL, filing reference, or label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`). No fabrication allowed
+# ====================================================================
+# STATUS & CONTROLS
+# ====================================================================
+
+- **VERSION 4.0** — Locked Output Templates added for all 4 phases
+- **Authority Gate** — Primary Tool selected by user (Google Finance / Finviz / MarketBeat / Skip). SEC EDGAR is separate opt-in phase
+- **Evidence Integrity Gate** — every important claim must be supported by real data (source URL, filing reference, or label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`)
 - **Completion Gate** — phase only complete after every step in reference is done
 
-## Intent-to-Command Engine
+---
 
-Each user request (example: "scan news for today") is compiled into an operation command with elements: action + object, scope/universe, input & freshness, workflow sequence, decision point, criteria/filter/ranking, output format, failure handling, safety limits, and completion criteria. Compiler refers to phase references.
-
-## Stagnation Breaker
+# ====================================================================
+# STAGNATION BREAKER
+# ====================================================================
 
 If Phase 1 produces 0 opportunities after two attempts with two different news sources (or one source + Other), stop with `No qualifying opportunities found for this trader profile and market focus.` Do not loop on the same source. Do not offer Phase 2 after Skip.
 
-## Autonomous Loop (7-Stage)
+---
 
-Each session operation goes through a closed loop:
+# ====================================================================
+# AUTONOMOUS LOOP (7-STAGE)
+# ====================================================================
 
 ```text
 INSPECT → PLAN → BUILD → VALIDATE → DIAGNOSE → REPAIR → REVALIDATE
