@@ -1,108 +1,74 @@
-# Phase 1 — The Scanner
+# Fasa 1 — Scanner
 
-Sumber: framework v2.2, Seksyen 7.
+Source: Framework v3.0
 
-7 steps: `1A → 1B → 1C → 1D → 1E → 1F → 1G`.
+## Overview
 
-## STEP 1A — Ask News Source
+Fasa 1 reads ONE news source selected by user, filters public companies by trader profile, and extracts qualifying opportunities through the Noise Gate.
 
-Tanya:
+**Default Source: Finviz** — If user does not choose, use Finviz.
 
-> Apa news source untuk hari ini?
+## 6 Steps: `1A → 1B → 1C → 1D → 1E → 1F`
 
-Pilihan:
+## STEP 1A — News Source
 
-- Reuters
-- CNBC
-- Bloomberg
-- FT
-- Other
+Ask:
 
-Rekod sebagai: `news_source`
+> "Apa news source untuk hari ini?"
 
-## STEP 1B — Read News Source
+Options:
+- [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
 
-Gunakan `news_source` yang dipilih user.
+→ If user does not choose, USE FINVIZ AS DEFAULT.
+
+Record as: `news_source`
+
+## STEP 1B — Fetch / Read Source
+
+Use selected `news_source`.
 
 Required:
-
-1. Access source.
-2. Record URL jika tersedia.
-3. Record access time.
-4. Read accessible relevant content.
-5. Apply market focus.
-6. Continue ke Step 1C.
+1. Access source
+2. Record URL if available
+3. Record access time
+4. Read accessible relevant content
+5. Apply market focus filter
+6. Continue to Step 1C
 
 ### Source Access Rule
 
-Jika source gagal diakses:
+If source fails to access:
 
 ```text
 BLOCKED — SOURCE COULD NOT BE ACCESSED
 ```
 
-Jangan claim source telah dibaca. Jangan hasilkan fabricated scanner report.
+Do not claim source was read. Do not generate fabricated scanner report.
 
 ## STEP 1C — Filter By Trader Profile
 
-### SCALPER — horizon 5–15 minutes
+### Profile Definitions
 
-Cari:
+| Profile | Time Horizon | Look For |
+|---------|--------------|----------|
+| SCALPER | 5-15 minutes | Pre-market gap, earnings reaction, Fed statement, major breaking news, immediate corporate catalyst |
+| INTRADAY | Current session | Economic data, CEO interview, analyst upgrade/downgrade, earnings, sector-moving news, regulatory announcement |
+| SWING | Days → Weeks | Earnings preview, sector rotation, guidance change, short-interest changes, product catalyst, industry developments |
+| INVESTOR | Long-term | 10-K, 10-Q, new CEO, M&A, regulatory shift, capital allocation, competitive moat, structural industry change |
 
-- Pre-market gap
-- Earnings reaction
-- Fed statement
-- Major breaking news
-- Immediate corporate catalyst
+### Hard Filter — NO TICKER = NOISE
 
-### INTRADAY — current trading session
-
-Cari:
-
-- Economic data
-- CEO interview
-- Analyst upgrade/downgrade
-- Earnings
-- Sector-moving news
-- Regulatory announcement
-
-### SWING — several days → weeks
-
-Cari:
-
-- Earnings preview
-- Sector rotation
-- Guidance change
-- Short-interest changes
-- Product catalyst
-- Industry developments
-
-### INVESTOR — long-term business thesis
-
-Cari:
-
-- 10-K
-- 10-Q
-- New CEO
-- M&A
-- Regulatory shift
-- Capital allocation
-- Competitive moat
-- Structural industry change
-
-### Hard Filter — NO TICKER
-
-Jika tiada ticker atau identifiable public company:
+If no ticker or identifiable public company:
 
 ```text
 NO TICKER = NOISE
 ```
 
-Discard.
+Discard immediately.
 
 ## STEP 1D — Extract Facts
 
-Untuk setiap candidate, rekod:
+For each candidate, record:
 
 - Company
 - Ticker
@@ -112,44 +78,38 @@ Untuk setiap candidate, rekod:
 - Market context
 - Source
 
-### Fact Rule
+### Fact Classification Rule
 
-Bezakan tiga kategori:
+Distinguish three categories:
 
-- **FACT** — disokong oleh source.
-- **INFERENCE** — interpretasi AI berdasarkan facts.
-- **ESTIMATE** — anggaran berdasarkan available data.
+- **FACT** — supported by source
+- **AI INFERENCE** — AI interpretation based on facts
+- **ESTIMATE** — approximation based on available data
 
-Jangan campur ketiga-tiga kategori.
+Do not mix categories.
 
 ## STEP 1E — Map Opportunity
 
-Setiap candidate dinilai:
+For each candidate:
 
 ### Direction
-
 - Positive
 - Negative
 - Mixed
 - Neutral
 
 ### Transmission Channel
-
 ```text
 NEWS
- ↓
+  ↓
 BUSINESS IMPACT
- ↓
-FINANCIAL IMPACT
- ↓
-EXPECTATION / SENTIMENT
- ↓
+  ↓
+FINANCIAL/EXPECTATION
+  ↓
 POTENTIAL PRICE IMPACT
 ```
 
-### Materiality
-
-Skor 1–5:
+### Materiality (1-5)
 
 | Score | Meaning |
 | ----: | --- |
@@ -161,19 +121,18 @@ Skor 1–5:
 
 ### Confidence
 
-- **HIGH** — Strong source support, catalyst jelas, mechanism jelas, low material uncertainty.
-- **MEDIUM** — Core facts supported, mechanism reasonably supported, some uncertainty exists.
-- **LOW** — Missing data, conflicting evidence, weak mechanism, high uncertainty.
+- **HIGH** — Strong source support, clear catalyst, clear mechanism, low material uncertainty
+- **MEDIUM** — Core facts supported, mechanism reasonably supported, some uncertainty exists
+- **LOW** — Missing data, conflicting evidence, weak mechanism, high uncertainty
 
 ### Horizon Fit
-
 - Strong
 - Partial
 - Poor
 
 ## STEP 1F — Noise Gate
 
-Candidate mesti memenuhi SEMUA:
+Candidate MUST pass ALL:
 
 ```text
 Materiality >= 3
@@ -183,57 +142,64 @@ Identifiable ticker/company
 Market focus relevant
 ```
 
-Maximum: **7 opportunities**.
+Maximum: **7 opportunities**
 
 ### Ranking
 
-Jika lebih daripada 7:
+If more than 7:
 
-1. Materiality
-2. Confidence
-3. Horizon Fit
+1. Materiality (descending)
+2. Confidence (descending)
+3. Horizon Fit (Strong > Partial)
 4. Catalyst clarity
 
-Ambil maksimum 7.
+Take maximum 7.
 
-## STEP 1G — Phase 1 Report
+---
 
-Format:
+# FASA 1 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+## Agora Dashboard — Tables + Cards
 
 ```markdown
-# MARKET SCANNER — [DATE]
+# MARKET SCANNER — [DATE] | Source: [SOURCE]
 
-## 1. [COMPANY] ([TICKER])
+---
 
-**Direction:** Positive / Negative / Mixed / Neutral
+## CARD [#1] — [TICKER]
 
-**Materiality:** X/5
+| Field | Value |
+|-------|-------|
+| Company | [COMPANY NAME] |
+| Direction | **Positive** / Negative / Mixed / Neutral |
+| Materiality | ★★★☆☆ (3/5) |
+| Confidence | HIGH / MEDIUM / LOW |
+| Horizon Fit | Strong / Partial / Poor |
 
-**Confidence:** High / Medium / Low
+### What Happened
+[Factual summary — FACT vs INFERENCE vs ESTIMATE clearly labeled]
 
-**Horizon Fit:** Strong / Partial / Poor
+### Why It Matters
+[Transmission mechanism explained]
 
-**What happened:**
-[Factual summary]
+### Key Data
+- [Key number 1]
+- [Key number 2]
+- Date: [Relevant date]
 
-**Why it matters:**
-[Transmission mechanism]
-
-**Key data:**
-[Numbers / dates]
-
-**Source:**
-[Source]
+### Source
+[Source name] | [URL if available]
 
 ---
 ```
 
-Ulang sehingga maksimum 7 opportunities.
+**Repeat for each opportunity (max 7)**
 
-## Phase 1 Restrictions
+## Restrictions
 
-Jangan beri:
-
+Do NOT provide:
 - Buy command
 - Sell command
 - Entry instruction
@@ -242,15 +208,19 @@ Jangan beri:
 - Guaranteed target
 - Guaranteed return
 
-Phase 1 ialah: `NEWS → FILTER → OPPORTUNITY`.
+Fasa 1 is: `NEWS → FILTER → OPPORTUNITY`
 
 ## STOP 1
 
-Selepas Phase 1 report:
+After Fasa 1 report:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Jangan jalankan Phase 2 secara automatik.
+Do NOT proceed to Fasa 2 automatically.
+
+User options at STOP 1:
+- Opt-in to Fasa 2 (select primary tool)
+- Skip → END

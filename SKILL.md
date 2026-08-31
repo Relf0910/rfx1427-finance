@@ -1,131 +1,182 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner dan analysis framework versi 2.2 yang membaca SATU news source pilihan user, menapis public companies mengikut trader profile, market focus, time horizon, materiality dan confidence, dan menjalankan Deep Analysis dengan verification SEC EDGAR hanya selepas opt-in eksplisit. Gunakan hanya apabila user meminta imbasan berita kewangan, penapisan opportunities, rujukan eksplisit kepada nama skill ini, atau aliran Intake / Phase 1 / Phase 2 / Phase 3 framework ini. Jangan gunakan untuk nasihat beli atau jual, pelaksanaan dagangan, monitoring berterusan, watchlist, price alert, portfolio management, soalan finance umum tanpa ticker dan skop news scanning, atau analisis saham individu di luar konteks sumber berita. Output adalah read-only analysis, bukan trading advisor.
+description: AI financial news scanner dan analysis framework versi 3.0 yang membaca SATU news source pilihan user, menapis public companies mengikut trader profile, market focus, time horizon, materiality dan confidence, dan menjalankan Deep Analysis dengan verification SEC EDGAR hanya selepas opt-in eksplisit. Gunakan hanya apabila user meminta imbasan berita kewangan, penapisan opportunities, rujukan eksplisit kepada nama skill ini, atau aliran Intake / Fasa 1 / Fasa 2 / Fasa 3 / Fasa 4 framework ini. Jangan gunakan untuk nasihat beli atau jual, pelaksanaan dagangan, monitoring berterusan, watchlist, price alert, portfolio management, soalan finance umum tanpa ticker dan skop news scanning, atau analisis saham individu di luar konteks sumber berita. Output adalah read-only analysis, bukan trading advisor.
 ---
 
 # RFX1427 Finance
 
-Rangka kerja scanner berita kewangan dan analisis dengan kawalan gates yang ketat, berteraskan fakta, dan verification rasmi. Berasal dari `rfx1427-finance-framework-v2.2.txt` — setiap polisi di bawah adalah petikan atau restrukturisasi langsung dari framework asal.
+Financial News Scanner + Deep Analysis + SEC Verification + Plain Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Prinsip teras
+## Version 3.0 — Master Framework (4 Fasa)
 
-- **Source Fact → Verification → AI Analysis → Estimate** — empat lapisan ini mesti sentiasa dibezakan.
-- **NO FABRICATION** — jangan reka berita, ticker, harga, volum, angka kewangan, filing, rating, aras atau akses sumber. Guna `NOT AVAILABLE`, `UNVERIFIED`, atau `BLOCKED` bila perlu.
-- **OPT-IN ONLY** — Phase 2 hanya bermula selepas user memilih primary tool. Phase 3 hanya bermula selepas user meminta secara eksplisit.
-- **NO AUTOMATIC PHASE TRANSITION** — lompat fasa tanpa keizinan dilarang.
-- **NO LOOP** — jika user pilih `Skip Deep Analysis`, sesi berakhir.
-- **NO MONITORING** — bukan watchlist manager, price alert, continuous monitor, atau portfolio manager.
-- **ONE QUESTION AT A TIME** untuk Intake.
-- **READ-ONLY ANALYSIS** — bukan trading advisor. Tiada buy/sell, entry, stop-loss, position sizing, atau guaranteed target.
+## Core Principles
 
-## Bahasa
+- **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
+- **NO FABRICATION** — never fabricate news, ticker, price, volume, financial figures, filing, rating, level, or source access. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED` when needed
+- **OPT-IN ONLY** — Fasa 2 and Fasa 3 only after explicit user selection. Fasa 4 only on user request
+- **NO AUTOMATIC PHASE TRANSITION** — phase cannot jump without permission
+- **NO LOOP, NO MONITOR, NO AUTO-PROCEED** — each session is fresh
+- **ONE QUESTION AT A TIME** for Intake
+- **READ-ONLY ANALYSIS** — not a trading advisor. No buy/sell, entry, stop-loss, position sizing, or guaranteed target
 
-- Interaksi dengan user: Bahasa Melayu.
-- Kod, identifier, error states, table headers, status enum: English (verbatim dari framework).
-- Output laporan (Phase 1 / 2 / 3): Bahasa mengikut `output_language` pilihan user (English, Bahasa Melayu, Other).
+## Language
 
-## Aliran kerja (Session Architecture)
+- User interaction: Bahasa Melayu
+- Code, identifiers, error states, table headers, status enum: English (verbatim from framework)
+- Report output (Fasa 1/2/3/4): Language according to user `output_language` selection (English, Bahasa Melayu, Other)
+
+## Global Flow (Session Architecture)
 
 ```text
-USER
-  │
-  ▼
-GATE 0 — INTAKE  (3 soalan, satu per satu, hard gate)
-  │
-  ├── incomplete → WAIT
-  │
-  ▼
-PHASE 1 — SCANNER  (1A → 1B → 1C → 1D → 1E → 1F → 1G)
-  │
-  ├── source blocked → STOP
-  ├── no qualifying opportunity → REPORT → STOP
-  │
-  ▼
-PHASE 1 REPORT (max 7 opportunities)
-  │
-  ▼
-STOP 1 — WAIT FOR USER
-  │
-  ├── Skip / no opt-in → END
-  │
-  └── Opt-in
-        │
-        ▼
-PHASE 2 — DEEP ANALYSIS  (2A tool selection → 2B 3-stage verification)
-        │
-        ▼
-PHASE 2 REPORT
-        │
-        ▼
-STOP 2 — WAIT FOR USER
-        │
-        └── User asks
-              │
-              ▼
-PHASE 3 — PLAIN SUMMARY
-              │
-              ▼
-             END
+INTAKE (Gate 0)
+    │
+    ▼
+FASA 1 — SCANNER (Finviz Default)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+FASA 2 — DEEP ANALYSIS (Google Finance Default + SEC EDGAR)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+FASA 3 — SEC EDGAR VERIFICATION (Jika Fasa 2 Gagal)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+FASA 4 — RINGKASAN BIAS (LOCKED — Agora Style)
+    │
+    ▼
+END
 ```
 
-## Pintu kawalan (Global Gate Rules)
+## Global Gate Rules (Wajib)
 
-1. **One question at a time** dalam Intake.
-2. **Hard gate** — jangan terus jika maklumat wajib belum lengkap.
-3. **No automatic phase transition** — fasa tidak melompat sendiri.
-4. **No loop** — selepas Skip, sesi berakhir.
-5. **No monitoring** — setiap sesi fresh.
-6. **No fabrication** — guna `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`.
+1. One question at a time
+2. Complete Intake before Fasa 1
+3. NO TICKER = NOISE
+4. Materiality >= 3
+5. Confidence >= Medium
+6. Horizon Fit != Poor
+7. Max 7 opportunities
+8. Fasa 2 and Fasa 3 opt-in only
+9. Fasa 4 only if user requests
+10. NO LOOP, NO MONITOR, NO AUTO-PROCEED
+11. Never invent data. Never use training data to replace fetch
 
-## Rujukan terperinci
+## Gate 0 — Intake (3 Questions)
 
-Baca fail-fail ini mengikut fasa yang sedang berjalan:
+Ask ONE at a time.
 
-| Fasa | Fail |
-|---|---|
-| Gate 0 Intake | `references/intake-form.md` |
-| Phase 1 Scanner | `references/phase1-scanner.md` |
-| Phase 2 Deep Analysis | `references/phase2-deep-analysis.md` |
-| Phase 3 Plain Summary | `references/phase3-plain-summary.md` |
-| Error states | `references/error-states.md` |
-| Data Integrity Hierarchy | `references/data-integrity-hierarchy.md` |
-| Hard Rules Master (37) | `references/hard-rules-master.md` |
-| Decision Tree | `references/decision-tree.md` |
-| Change Log v2.2 | `references/change-log-v2.md` |
-| Acceptance Tests | `references/acceptance-tests.md` |
+**Q1:** "Apa bahasa untuk output?"
+- [English] [Bahasa Melayu] [Other]
+- → record: `output_language`
 
-## Ringkasan error states (piawai)
+**Q2:** "Apa trader profile?"
+- [Scalper] [Intraday] [Swing] [Investor]
+- → record: `trader_profile`
 
-| Keadaan | Output |
-|---|---|
-| Source gagal diakses | `BLOCKED — SOURCE COULD NOT BE ACCESSED` |
-| Primary tool gagal | `PRIMARY TOOL — BLOCKED` |
-| Data hilang | `NOT AVAILABLE` |
-| SEC data hilang | `UNVERIFIED — SEC DATA NOT AVAILABLE` |
-| Konflik data (SEC authoritative) | `DATA MISMATCH — SEC OVERRIDE` |
-| Mechanism gagal | `REJECTED` |
-| Confidence Low | `LOW CONFIDENCE — SKIP` |
-| Tiada opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
+**Q3:** "Apa market focus?"
+- [US] [Singapore] [Malaysia] [Other]
+- → record: `market`
 
-## Opportunity Lifecycle
+[INTAKE COMPLETE]
+"Language: X | Profile: X | Market: X"
+→ PROCEED TO FASA 1
 
-`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → PHASE 1 REPORT → USER OPT-IN → PRIMARY DATA → SEC DATA → COMPARISON → MECHANISM → TIMING → PRICE LEVELS → FINAL CONFIDENCE → PHASE 2 REPORT`
+## Profile Definitions
 
-Mana-mana hard gate gagal → `STOP / SKIP`.
+| Profile | Time Horizon |
+|---------|--------------|
+| SCALPER | 5-15 minute catalyst |
+| INTRADAY | Current trading session |
+| SWING | Days to weeks |
+| INVESTOR | Long-term business thesis |
 
-## Kriteria Noise Gate (Phase 1)
+## Fasa 1 — Scanner (Finviz Default)
 
-Semua mesti lulus:
+### Step 1A — News Source
 
-- `Materiality >= 3` (skala 1–5)
-- `Confidence >= Medium` (High / Medium / Low)
-- `Horizon Fit != Poor` (Strong / Partial / Poor)
-- Ticker atau public company boleh dikenal pasti
-- Market focus relevan
+Ask: "Apa news source untuk hari ini?"
+- [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
+- → If user does not choose, USE FINVIZ AS DEFAULT
 
-Ranking jika > 7: Materiality → Confidence → Horizon Fit → Catalyst clarity. Maksimum **7 opportunities**.
+### Step 1B — Fetch / Read Source
 
-## Comparison Matrix (Phase 2 Stage 3)
+Use selected source. Record:
+- Source name
+- URL (if available)
+- Access time
+
+If source fails to access:
+`BLOCKED — SOURCE COULD NOT BE ACCESSED`
+Do not claim source was read. Do not invent.
+
+### Step 1C — Profile Filter
+
+Use definitions:
+- SCALPER → 5-15 min catalyst
+- INTRADAY → current trading session
+- SWING → days → weeks
+- INVESTOR → long-term business thesis
+
+Hard rule: NO TICKER = NOISE (discard immediately)
+
+### Step 1D — Extract Facts
+
+For each candidate:
+- Company, Ticker
+- What happened
+- Key numbers
+- Relevant dates
+- Source
+
+Distinguish: FACT vs AI INFERENCE vs ESTIMATE
+
+### Step 1E — Map Opportunity
+
+- Direction: Positive / Negative / Mixed / Neutral
+- Materiality: 1-5 (1=Minimal, 5=Very High)
+- Confidence: High / Medium / Low
+- Horizon Fit: Strong / Partial / Poor
+- Transmission Channel: NEWS → BUSINESS IMPACT → FINANCIAL/EXPECTATION → POTENTIAL PRICE IMPACT
+
+### Step 1F — Noise Gate
+
+Candidate must pass ALL:
+- Materiality >= 3
+- Confidence >= Medium
+- Horizon Fit != Poor
+- Ticker/company identifiable
+- Market relevant
+
+Max 7 opportunities. If more, rank by: Materiality > Confidence > Horizon Fit > Catalyst clarity
+
+### Fasa 1 Output Format — LOCKED (Agora Style)
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+---
+
+## Fasa 2 — Deep Analysis (Google Finance Default + SEC EDGAR)
+
+### Step 2A — Primary Tool Selection
+
+Ask: "Apa primary tool untuk deep analysis?"
+- [Google Finance (Default)] [MarketBeat] [Skip]
+
+### Step 2B — 3-Stage Verification
+
+1. Fetch Primary Data
+2. Fetch SEC EDGAR Data
+3. Comparison Matrix
+
+### Comparison Matrix (Stage 3)
 
 | Situation | Status | Action |
 |---|---|---|
@@ -134,6 +185,20 @@ Ranking jika > 7: Materiality → Confidence → Horizon Fit → Catalyst clarit
 | SEC unavailable | UNVERIFIED | Use Primary + label |
 | Primary unavailable, SEC available | SEC ONLY | Use SEC |
 | Both unavailable | DATA NOT AVAILABLE | Do not use |
+
+---
+
+## Fasa 3 — SEC EDGAR Verification (Jika Fasa 2 Gagal)
+
+Triggered ONLY if Fasa 2 fails or user requests explicit SEC verification.
+
+---
+
+## Fasa 4 — Ringkesan Bias (LOCKED — Agora Style)
+
+Output format LOCKED to Agora Dashboard Style (Tables + Cards).
+
+---
 
 ## Data Integrity Hierarchy
 
@@ -149,49 +214,69 @@ AI INFERENCE
 ESTIMATE
 ```
 
-Nota: Hierarchy bukan bermaksud SEC sentiasa lengkap. Untuk item yang memang boleh diverifikasi melalui SEC, SEC ialah authority. Untuk market data (price, volume, technicals), guna primary tool.
+## Error States Summary (Standard)
 
-## Definisi siap (DoD) untuk setiap sesi
+| Condition | Output |
+|---|---|
+| Source fails to access | `BLOCKED — SOURCE COULD NOT BE ACCESSED` |
+| Primary tool fails | `PRIMARY TOOL — BLOCKED` |
+| Data missing | `NOT AVAILABLE` |
+| SEC data missing | `UNVERIFIED — SEC DATA NOT AVAILABLE` |
+| Data conflict (SEC authoritative) | `DATA MISMATCH — SEC OVERRIDE` |
+| Mechanism fails | `REJECTED` |
+| Confidence Low | `LOW CONFIDENCE — SKIP` |
+| No opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
 
-Sesi dianggap lengkap hanya selepas:
+## Opportunity Lifecycle
 
-- Intake lengkap dengan ketiga-tiga field direkodkan.
-- Phase 1 report dihantar dengan max 7 opportunities atau `No qualifying opportunities`.
-- Phase 2 hanya jika user opt-in dan tool dipilih.
-- Phase 3 hanya jika user meminta.
-- Setiap dakwaan berlabel dengan betul (FACT / INFERENCE / ESTIMATE).
-- Setiap error state menggunakan label piawai.
-- Sesi berakhir dengan END (tiada loop, tiada monitoring).
+`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → FASA 1 REPORT → USER OPT-IN → PRIMARY DATA → SEC DATA → COMPARISON → MECHANISM → TIMING → PRICE LEVELS → FINAL CONFIDENCE → FASA 2 REPORT`
 
-## Status & Kawalan
+Any hard gate fails → `STOP / SKIP`
 
-- **DRAFT** — skill ini berada dalam status DRAFT sehingga user secara eksplisit memilih pilihan `Siap` (semua format + pasang, atau semua format tanpa pasang). Tiada auto-install, auto-publish, atau auto-replace tanpa arahan jelas.
-- **Authority Gate** — SEC EDGAR ialah mandatory verification partner; Primary Tool dipilih oleh user (Finviz / Google Finance / MarketBeat / Skip). Primary Tool tidak dipilih oleh AI bagi pihak user.
-- **Evidence Integrity Gate** — setiap dakwaan penting mesti disokong data sebenar (source URL, filing reference, atau label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`). Tiada fabrication dibenarkan.
-- **Completion Gate** — fasa hanya selesai selepas setiap step dalam rujukan selesai dan status direkodkan (PRIMARY DATA FETCHED, SEC DATA FETCHED, MATCH / MISMATCH, dll).
+## References
+
+| Phase | File |
+|---|---|
+| Gate 0 Intake | `references/intake-form.md` |
+| Fasa 1 Scanner | `references/phase1-scanner.md` |
+| Fasa 2 Deep Analysis | `references/phase2-deep-analysis.md` |
+| Fasa 3 SEC EDGAR Verification | `references/phase3-sec-edgar.md` |
+| Fasa 4 Ringkesan Bias | `references/phase4-ringkesan-bias.md` |
+| Error States | `references/error-states.md` |
+| Data Integrity Hierarchy | `references/data-integrity-hierarchy.md` |
+| Hard Rules Master (37) | `references/hard-rules-master.md` |
+| Decision Tree | `references/decision-tree.md` |
+| Acceptance Tests | `references/acceptance-tests.md` |
+
+## Status & Controls
+
+- **VERSION 3.0** — Master Framework with 4 Fasa
+- **Authority Gate** — SEC EDGAR is mandatory verification partner; Primary Tool selected by user (Google Finance / MarketBeat / Skip). Primary Tool not selected by AI for user
+- **Evidence Integrity Gate** — every important claim must be supported by real data (source URL, filing reference, or label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`). No fabrication allowed
+- **Completion Gate** — phase only complete after every step in reference is done and status recorded (PRIMARY DATA FETCHED, SEC DATA FETCHED, MATCH / MISMATCH, etc)
 
 ## Intent-to-Command Engine
 
-Setiap permintaan user (contoh: "scan berita untuk hari ini") dikompil kepada perintah operasi dengan elemen: tindakan + objek, skop/universe, input & kesegaran, urutan kerja, titik keputusan, kriteria/filter/ranking, format output, pengendalian kegagalan, had keselamatan, dan kriteria siap. Compiler merujuk kepada rujukan fasa yang berkaitan — `references/intake-form.md`, `references/phase1-scanner.md`, `references/phase2-deep-analysis.md`, `references/phase3-plain-summary.md`.
+Each user request (example: "scan news for today") is compiled into an operation command with elements: action + object, scope/universe, input & freshness, workflow sequence, decision point, criteria/filter/ranking, output format, failure handling, safety limits, and completion criteria. Compiler refers to phase references.
 
 ## Stagnation Breaker
 
-Jika Phase 1 menghasilkan 0 opportunities selepas dua percubaan dengan dua news source berbeza (atau satu sumber + Other), hentikan dengan `No qualifying opportunities found for this trader profile and market focus.` Jangan loop pada sumber yang sama. Jangan tawar Phase 2 selepas Skip.
+If Fasa 1 produces 0 opportunities after two attempts with two different news sources (or one source + Other), stop with `No qualifying opportunities found for this trader profile and market focus.` Do not loop on the same source. Do not offer Fasa 2 after Skip.
 
 ## Autonomous Loop (7-Stage)
 
-Operasi setiap sesi melalui kitaran tertutup:
+Each session operation goes through a closed loop:
 
 ```text
 INSPECT → PLAN → BUILD → VALIDATE → DIAGNOSE → REPAIR → REVALIDATE
 ```
 
-- INSPECT — sahkan state semasa (Intake lengkap? Phase mana?).
-- PLAN — pilih fasa & step seterusnya.
-- BUILD — jalankan step (akses source, extract, verify).
-- VALIDATE — semak hard gate (Materiality, Confidence, Horizon Fit, Noise Gate, Comparison Matrix).
-- DIAGNOSE — kenal pasti punca jika gate gagal.
-- REPAIR — pilih tindakan pembetulan (labelkan NOT AVAILABLE, SKIP, dsb).
-- REVALIDATE — ulang validasi selepas repair.
+- INSPECT — verify current state (Intake complete? Which Phase?)
+- PLAN — select next phase & step
+- BUILD — execute step (access source, extract, verify)
+- VALIDATE — check hard gate (Materiality, Confidence, Horizon Fit, Noise Gate, Comparison Matrix)
+- DIAGNOSE — identify cause if gate fails
+- REPAIR — select corrective action (label NOT AVAILABLE, SKIP, etc)
+- REVALIDATE — repeat validation after repair
 
-Loop berterusan sehingga Definisi Siap lulus atau halangan didokumenkan.
+Loop continues until Definition of Ready passes or blockers are documented.

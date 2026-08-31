@@ -1,49 +1,131 @@
-# Phase 3 — Plain Summary
+# Fasa 4 — Ringkesan Bias
 
-Sumber: framework v2.2, Seksyen 9.
+Source: Framework v3.0
 
-Phase 3 hanya aktif: `IF USER ASKS`.
+## Overview
 
-## Output
+Fasa 4 provides a plain, non-technical summary of opportunities with weekly bias direction. This is the final phase before END.
 
-| Stock | Direction | Est. Change | Reason |
-| --- | --- | ---: | --- |
-| XXX | Positive | X% | Reason |
-| XXX | Negative | X% | Reason |
-| XXX | Neutral | — | Reason |
+**Fasa 4 is: USER REQUEST ONLY**
+
+**Output Style: LOCKED — Agora Dashboard (Tables + Cards)**
+
+## Purpose
+
+- Translate technical analysis into actionable language
+- Provide weekly bias direction (not trading advice)
+- Keep it simple, factual, no jargon
+
+## When Fasa 4 is Available
+
+After Fasa 2 or Fasa 3 completion:
+- User requests: "Ringkesan" / "Summary" / "Plain summary"
+- User requests: "Weekly bias"
+- User requests: "Fasa 4"
+
+## Bias Categories
+
+| Bias | Meaning |
+| --- | --- |
+| **POSITIVE** | Catalysts identified that may support upside |
+| **NEGATIVE** | Catalysts identified that may pressure downside |
+| **NEUTRAL** | No clear directional catalyst |
+| **MIXED** | Conflicting catalysts present |
 
 ## Direction Language
 
 ### POSITIVE
 
-> PREPARE FOR VOLUME BUY
+> WEEKLY BIAS: UPSIDE POTENTIAL
+> Catalyst: [brief factual description]
 
 ### NEGATIVE
 
-> BE CAREFUL — MARKET CRASH RISK TODAY
+> WEEKLY BIAS: DOWNSIDE RISK
+> Catalyst: [brief factual description]
 
 ### NEUTRAL
 
-> WAIT FOR CONFIRMATION — NO CLEAR EDGE TODAY
+> WEEKLY BIAS: NO CLEAR DIRECTION
+> Catalyst: [brief factual description]
+
+### MIXED
+
+> WEEKLY BIAS: MIXED SIGNALS
+> Catalyst: [brief factual description]
 
 ## Estimate Rule
 
-Jika estimated change diberikan:
+If estimated change is provided:
 
 > **Estimate, not prediction.**
 
-Estimate tidak boleh dipersembahkan sebagai:
-
+Estimate cannot be presented as:
 - Guaranteed result
 - Certain return
 - Guaranteed price movement
 
-Jika tidak mempunyai asas mencukupi:
-
+If sufficient basis not available:
 ```text
 N/A
 ```
 
+---
+
+## FASA 4 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+### Agora Dashboard — Weekly Bias Summary
+
+```markdown
+# WEEKLY BIAS SUMMARY — [DATE]
+Language: [English / Bahasa Melayu]
+
+---
+
+## CARD [#1] — [TICKER]
+
+| Field | Value |
+|-------|-------|
+| Company | [COMPANY NAME] |
+| Weekly Bias | **POSITIVE** / NEGATIVE / NEUTRAL / MIXED |
+| Est. Change | [+/-X%] or N/A |
+| Primary Catalyst | [Brief factual description] |
+
+### Key Points
+- [Point 1 — FACT / INFERENCE]
+- [Point 2 — FACT / INFERENCE]
+
+### Source
+[Source name] | SEC: [Verified / Unverified / N/A]
+
+---
+```
+
+**Repeat for each opportunity**
+
+---
+
+## Summary Table
+
+```markdown
+## BIAS OVERVIEW
+
+| Ticker | Bias | Est. Change | Primary Catalyst |
+|--------|------|-------------|------------------|
+| XXX | **POSITIVE** | +X% | [Brief] |
+| XXX | NEGATIVE | -X% | [Brief] |
+| XXX | NEUTRAL | — | [Brief] |
+```
+
+---
+
 ## Penutup
 
-Selepas Phase 3 output: `END`. Tiada loop, tiada monitoring, tiada Phase tambahan.
+After Fasa 4 output:
+```text
+END
+```
+
+No loop. No monitoring. No additional phases.

@@ -1,80 +1,67 @@
-# Phase 2 — Deep Analysis
+# Fasa 2 — Deep Analysis
 
-Sumber: framework v2.2, Seksyen 8.
+Source: Framework v3.0
 
-Phase 2 ialah: `OPT-IN ONLY`.
+## Overview
 
-## STEP 2A — Tool Selection
+Fasa 2 performs detailed analysis on Phase 1 opportunities using user-selected primary tool and SEC EDGAR verification.
 
-Tanya:
+**Fasa 2 is: OPT-IN ONLY**
 
-> Continue to Phase 2 — Deep Analysis?
+**Default Primary Tool: Google Finance** — If user does not choose, use Google Finance.
 
-Pilihan:
+## STEP 2A — Primary Tool Selection
 
-1. Finviz
-2. Google Finance
-3. MarketBeat
-4. Skip Deep Analysis
+Ask:
+
+> "Apa primary tool untuk deep analysis?"
+
+Options:
+- [Google Finance (Default)] [MarketBeat] [Skip]
+
+→ If user does not choose, USE GOOGLE FINANCE AS DEFAULT.
 
 ### Action
 
-Jika pilih 1–3:
-
+If selects tool:
 ```text
 primary_tool = selected tool
 ```
+Proceed to Step 2B.
 
-Proceed ke Step 2B.
-
-Jika pilih 4:
-
+If selects Skip:
 ```text
 END SESSION
 ```
 
-### Hard Rule
+### Hard Rules
 
-- Jangan pilih tool bagi pihak user.
-- Jangan jalankan Phase 2 tanpa opt-in.
-- Jangan offer Phase 2 semula selepas Skip.
-- SEC EDGAR tidak perlu dipilih secara berasingan — ia mandatory verification partner.
+- Do NOT select tool for user
+- Do NOT run Fasa 2 without opt-in
+- Do NOT offer Fasa 2 again after Skip
+- SEC EDGAR is mandatory verification partner (not separately selected)
 
 ## STEP 2B — 3-Stage Verification
 
 ```text
-STAGE 1
-   ↓
-STAGE 2
-   ↓
-STAGE 3
+STAGE 1 (Primary Data)
+    ↓
+STAGE 2 (SEC EDGAR Data)
+    ↓
+STAGE 3 (Compare, Analyze, Synthesize)
 ```
 
-Stage seterusnya hanya bermula selepas stage sebelumnya selesai.
+Next stage only starts after previous stage completes.
+
+---
 
 ### STAGE 1 — Fetch Primary Tool Data
 
-Fetch data untuk: `EVERY PHASE 1 OPPORTUNITY`.
-
-#### FINVIZ
-
-Fetch jika tersedia:
-
-- Current price
-- Price change %
-- Volume
-- RSI
-- SMA 20
-- SMA 50
-- P/E
-- EPS
-- Revenue
-- Relevant news headlines
+Fetch data for: EVERY PHASE 1 OPPORTUNITY
 
 #### GOOGLE FINANCE
 
-Fetch jika tersedia:
-
+Fetch if available:
 - Current price
 - Price change %
 - Recent news
@@ -84,37 +71,48 @@ Fetch jika tersedia:
 
 #### MARKETBEAT
 
-Fetch jika tersedia:
-
+Fetch if available:
 - Current price
 - Price change %
 - Short interest
 - Analyst consensus
 - Financial ratios
 
+#### FINVIZ
+
+Fetch if available:
+- Current price
+- Price change %
+- Volume
+- RSI
+- SMA 20, SMA 50
+- P/E, EPS
+- Revenue
+- Relevant news headlines
+
 #### Primary Data Rule
 
-Jika field tidak tersedia:
-
+If field not available:
 ```text
 PRIMARY DATA — NOT AVAILABLE
 ```
 
-Jangan invent.
+Do NOT invent.
 
-Jika primary tool gagal:
-
+If primary tool fails:
 ```text
 PRIMARY TOOL — BLOCKED
 ```
 
-Jangan claim data telah fetched.
+Do NOT claim data was fetched.
 
-Internal state: `PRIMARY DATA FETCHED — [TOOL]` (tidak perlu output kepada user).
+Internal state: `PRIMARY DATA FETCHED — [TOOL]`
+
+---
 
 ### STAGE 2 — Fetch SEC EDGAR Data
 
-Hanya selepas Stage 1 selesai. Gunakan ticker daripada Phase 1 / Stage 1.
+Only after Stage 1 completes. Use ticker from Phase 1.
 
 #### SEC Verification Matrix
 
@@ -130,16 +128,13 @@ Hanya selepas Stage 1 selesai. Gunakan ticker daripada Phase 1 / Stage 1.
 
 #### SEC Data States
 
-**VERIFIED** — jika SEC filing menyediakan data:
-
+**VERIFIED** — if SEC filing provides data:
 ```text
 SEC_DATA
 ```
+Record: filing type, filing date, relevant period, value, filing reference.
 
-Rekod: filing type, filing date, relevant period, value, filing reference.
-
-**UNVERIFIED** — jika SEC data tidak tersedia:
-
+**UNVERIFIED** — if SEC data not available:
 ```text
 UNVERIFIED — SEC DATA NOT AVAILABLE
 ```
@@ -150,16 +145,19 @@ UNVERIFIED — SEC DATA NOT AVAILABLE
 NO SEC DATA ≠ FALSE
 ```
 
-Ia bermaksud `UNVERIFIED`. Jangan paksa verification.
+It means `UNVERIFIED`. Do not force verification.
 
-Internal state: `SEC DATA FETCHED — [VERIFIED / UNVERIFIED]` (tidak perlu output kepada user).
+Internal state: `SEC DATA FETCHED — [VERIFIED / UNVERIFIED]`
+
+---
 
 ### STAGE 3 — Compare, Analyze & Synthesize
 
-Hanya selepas Stage 1 dan Stage 2 selesai. AI kini boleh:
+Only after Stage 1 and Stage 2 complete.
 
-1. Compare
-2. Verify
+AI analysis tasks:
+1. Compare Primary vs SEC data
+2. Verify consistency
 3. Confirm mechanism
 4. Assess timing
 5. Identify levels
@@ -167,11 +165,11 @@ Hanya selepas Stage 1 dan Stage 2 selesai. AI kini boleh:
 
 #### Data Authority Rule
 
-SEC EDGAR ialah authority untuk financial filing data. Primary tool untuk market/technical/analyst data yang SEC tidak direka untuk menyediakan.
+SEC EDGAR is authority for financial filing data. Primary tool for market/technical/analyst data that SEC is not designed to provide.
 
-Contoh primary tool data: Current price, intraday change, volume, RSI, VWAP, technical indicators, analyst targets, analyst consensus.
+Examples of Primary Tool data: Current price, intraday change, volume, RSI, VWAP, technical indicators, analyst targets, analyst consensus.
 
-#### Comparison Rules
+#### Comparison Matrix
 
 | Situation | Status | Action |
 | --- | --- | --- |
@@ -181,142 +179,135 @@ Contoh primary tool data: Current price, intraday change, volume, RSI, VWAP, tec
 | Primary unavailable, SEC available | SEC ONLY | Use SEC |
 | Both unavailable | DATA NOT AVAILABLE | Do not use |
 
+---
+
 ### STEP 3.1 — Confirm Mechanism
 
-Semak transmission channel daripada Phase 1.
+Check transmission channel from Phase 1.
 
 Output:
-
 - Confirmed
 - Partially Confirmed
 - Rejected
 
-Jika `Rejected`, opportunity tidak boleh dipersembahkan sebagai valid opportunity.
+If `Rejected`, opportunity cannot be presented as valid.
 
 ### STEP 3.2 — Assess Timing
 
-Match dengan trader profile:
+Match with trader profile:
 
-- **SCALPER** → `5–15 minutes`
-- **INTRADAY** → `Current session`
-- **SWING** → `Days → weeks`
-- **INVESTOR** → `Long-term`
+| Profile | Timing |
+| --- | --- |
+| SCALPER | 5–15 minutes |
+| INTRADAY | Current session |
+| SWING | Days → weeks |
+| INVESTOR | Long-term |
 
-Output: Strong / Partial / Poor.
+Output: Strong / Partial / Poor
 
 ### STEP 3.3 — Identify Price Levels
 
-#### SCALPER
-
-- Pre-market high
-- Pre-market low
-- R1
-- R2
-
-#### INTRADAY
-
-- VWAP
-- Opening Range High
-- Opening Range Low
-
-#### SWING
-
-- 20-day SMA
-- 50-day SMA
-- Recent swing high
-- Recent swing low
-
-#### INVESTOR
-
-- 52-week range
-- Current P/E
-- Historical valuation
-- 5-year average P/E if available
+| Profile | Levels |
+| --- | --- |
+| SCALPER | Pre-market high, Pre-market low, R1, R2 |
+| INTRADAY | VWAP, Opening Range High, Opening Range Low |
+| SWING | 20-day SMA, 50-day SMA, Recent swing high/low |
+| INVESTOR | 52-week range, Current P/E, Historical valuation |
 
 #### Price Level Integrity Rule
 
-Jika data tidak tersedia:
-
+If data not available:
 ```text
 NOT AVAILABLE
 ```
 
-Jangan invent angka. Jangan claim exact level jika source tidak menyokongnya.
+Do NOT invent numbers. Do NOT claim exact level if source does not support it.
 
 ### STEP 3.4 — Confidence Gate
 
-Selepas semua verification:
-
-```text
-High
-Medium
-Low
-```
+After all verification:
+- High
+- Medium
+- Low
 
 #### Low Confidence
 
-Jika `Confidence = Low`:
-
+If `Confidence = Low`:
 ```text
 LOW CONFIDENCE — SKIP
 ```
 
-Jangan masukkan ke final Deep Analysis report.
+Do NOT include in final Deep Analysis report.
 
 #### If All Opportunities Are Low
 
 Output:
-
 > No opportunities passed the final confidence gate.
 
-Jangan force-fill report.
+Do NOT force-fill report.
 
-## Phase 2 Final Output
+---
+
+## FASA 2 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+### Agora Dashboard — Deep Analysis Report
 
 ```markdown
 # DEEP ANALYSIS — [DATE]
 
-## [COMPANY] ([TICKER])
+---
 
-**Primary Tool:**
-Finviz / Google Finance / MarketBeat
+## CARD [#1] — [TICKER]
 
-**SEC Verification:**
-Verified / Unverified / Mismatch / SEC Only
+| Field | Value |
+|-------|-------|
+| Company | [COMPANY NAME] |
+| Primary Tool | [Google Finance / MarketBeat / Finviz] |
+| SEC Status | Verified / Unverified / Mismatch / SEC Only |
 
-**Data Comparison:**
+### Data Comparison
 
-* [Item 1]: Primary [X] | SEC [Y] → Match / Mismatch / Unverified
-* [Item 2]: Primary [X] | SEC [Y] → Match / Mismatch / Unverified
+| Item | Primary | SEC | Status |
+|------|---------|-----|--------|
+| [Item 1] | [X] | [Y] | Match / Mismatch / Unverified |
+| [Item 2] | [X] | [Y] | Match / Mismatch / Unverified |
 
-**Catalyst:**
-[...]
+### Catalyst
+[Factual summary with labels: FACT / INFERENCE / ESTIMATE]
 
-**Mechanism:**
-Confirmed / Partially Confirmed / Rejected
+### Mechanism
+**Confirmed** / Partially Confirmed / Rejected
 
-**Timing Fit:**
-Strong / Partial / Poor
+### Timing Fit
+**Strong** / Partial / Poor (matched to [Profile])
 
-**Relevant Levels:**
-[...]
+### Relevant Levels
+- [Level 1]: [Value]
+- [Level 2]: [Value]
 
-**Confidence:**
-High / Medium
+### Confidence
+**HIGH** / MEDIUM
 
-**Risk / Uncertainty:**
-[...]
+### Risk / Uncertainty
+[Any identified risks or uncertainties]
 
 ---
 ```
 
 ## STOP 2
 
-Selepas Phase 2:
+After Fasa 2 report:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Jangan jalankan Phase 3 secara automatik.
+Do NOT proceed to Fasa 3 automatically.
+
+User options at STOP 2:
+- Proceed to Fasa 3 (SEC EDGAR Verification)
+- Proceed to Fasa 4 (Ringkesan Bias) — only if requested
+- Skip → END
