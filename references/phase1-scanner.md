@@ -1,10 +1,10 @@
-# Fasa 1 — Scanner
+# Phase 1 — Scanner
 
-Source: Framework v3.0
+Source: Framework v3.1
 
 ## Overview
 
-Fasa 1 reads ONE news source selected by user, filters public companies by trader profile, and extracts qualifying opportunities through the Noise Gate.
+Phase 1 reads ONE news source selected by user, filters public companies by trader profile, and extracts qualifying opportunities through the Noise Gate.
 
 **Default Source: Finviz** — If user does not choose, use Finviz.
 
@@ -14,7 +14,7 @@ Fasa 1 reads ONE news source selected by user, filters public companies by trade
 
 Ask:
 
-> "Apa news source untuk hari ini?"
+> "What news source for today?"
 
 Options:
 - [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
@@ -157,11 +157,11 @@ Take maximum 7.
 
 ---
 
-# FASA 1 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+# PHASE 1 — OUTPUT FORMAT (LOCKED)
 
-WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 
-## Agora Dashboard — Tables + Cards
+## Tables + Cards Format
 
 ```markdown
 # MARKET SCANNER — [DATE] | Source: [SOURCE]
@@ -208,19 +208,19 @@ Do NOT provide:
 - Guaranteed target
 - Guaranteed return
 
-Fasa 1 is: `NEWS → FILTER → OPPORTUNITY`
+Phase 1 is: `NEWS → FILTER → OPPORTUNITY`
 
 ## STOP 1
 
-After Fasa 1 report:
+After Phase 1 report:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Do NOT proceed to Fasa 2 automatically.
+Do NOT proceed to Phase 2 automatically.
 
 User options at STOP 1:
-- Opt-in to Fasa 2 (select primary tool)
+- Opt-in to Phase 2 (select primary tool)
 - Skip → END

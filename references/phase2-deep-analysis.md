@@ -1,29 +1,29 @@
-# Fasa 2 — Deep Analysis (Primary Tool Only, NO SEC)
+# Phase 2 — Deep Analysis (Primary Tool Only, NO SEC)
 
 Source: Framework v3.1
 
 ## Overview
 
-Fasa 2 performs detailed analysis on Fasa 1 opportunities using **Primary Tool ONLY**.
+Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool ONLY**.
 
-**IMPORTANT: No SEC EDGAR in Fasa 2. SEC is handled in Fasa 3 separately.**
+**IMPORTANT: No SEC EDGAR in Phase 2. SEC is handled in Phase 3 separately.**
 
-**Fasa 2 is: OPT-IN ONLY**
+**Phase 2 is: OPT-IN ONLY**
 
 **Default Primary Tool: Google Finance** — If user does not choose, use Google Finance.
 
-## FASA 2 — PERATURAN (WAJIB)
+## PHASE 2 — RULES (MANDATORY)
 
 1. **FETCH STATUS must be shown** — SUCCESS / BLOCKED / UNVERIFIED
 2. **Do NOT invent data** — use NOT AVAILABLE, UNVERIFIED, BLOCKED
 3. **Do NOT give buy/sell signals** — use labels: POSITIVE / NEUTRAL / NEGATIVE
-4. **NO SEC in Fasa 2** — SEC is handled in Fasa 3 (separate opt-in phase)
+4. **NO SEC in Phase 2** — SEC is handled in Phase 3 (separate opt-in phase)
 
 ## STEP 2A — Primary Tool Selection
 
 Ask:
 
-> "Apa primary tool untuk deep analysis?"
+> "What primary tool for deep analysis?"
 
 Options:
 - [Google Finance (Default)] [Finviz] [MarketBeat] [Skip]
@@ -46,13 +46,13 @@ END SESSION
 ### Hard Rules
 
 - Do NOT select tool for user
-- Do NOT run Fasa 2 without opt-in
-- Do NOT offer Fasa 2 again after Skip
-- **No SEC EDGAR in Fasa 2** — SEC verification is Fasa 3 (separate opt-in)
+- Do NOT run Phase 2 without opt-in
+- Do NOT offer Phase 2 again after Skip
+- **No SEC EDGAR in Phase 2** — SEC verification is Phase 3 (separate opt-in)
 
 ## STEP 2B — Fetch Primary Data
 
-Fetch data from selected Primary Tool for **EVERY FASA 1 OPPORTUNITY**.
+Fetch data from selected Primary Tool for **EVERY PHASE 1 OPPORTUNITY**.
 
 ### GOOGLE FINANCE
 
@@ -110,7 +110,7 @@ Internal state: `PRIMARY DATA FETCHED — [TOOL]`
 Only after all Primary Data is fetched.
 
 AI analysis tasks:
-1. Verify catalyst from Fasa 1
+1. Verify catalyst from Phase 1
 2. Confirm transmission mechanism
 3. Assess timing fit with trader profile
 4. Identify relevant price levels
@@ -172,9 +172,9 @@ Do NOT force-fill report.
 
 ---
 
-## FASA 2 — OUTPUT FORMAT (LOCKED)
+## PHASE 2 — OUTPUT FORMAT (LOCKED)
 
-WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 
 ### PHASE 2 — DEEP ANALYSIS
 
@@ -189,7 +189,7 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 #### 2. Catalyst Verification
 
 ```markdown
-| Ticker | Fasa 1 Catalyst | Verified | Notes |
+| Ticker | Phase 1 Catalyst | Verified | Notes |
 |--------|------------------|----------|-------|
 | XXX | [Description] | YES / PARTIAL / NO | [Notes] |
 ```
@@ -239,16 +239,16 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 ## STOP 2
 
-After Fasa 2 report:
+After Phase 2 report:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Do NOT proceed to Fasa 3 automatically.
+Do NOT proceed to Phase 3 automatically.
 
 User options at STOP 2:
-- Opt-in to Fasa 3 (SEC EDGAR Verification)
-- Request Fasa 4 (Ringkesan Bias)
+- Opt-in to Phase 3 (SEC EDGAR Verification)
+- Request Phase 4 (Weekly Bias Summary)
 - Skip → END

@@ -1,6 +1,6 @@
 # Error States
 
-Source: Framework v3.0
+Source: Framework v3.1
 
 ## SOURCE ERROR
 
@@ -8,7 +8,7 @@ Source: Framework v3.0
 BLOCKED — SOURCE COULD NOT BE ACCESSED
 ```
 
-Used when: News source fails to be accessed in Fasa 1.
+Used when: News source fails to be accessed in Phase 1.
 
 ## PRIMARY TOOL ERROR
 
@@ -16,7 +16,7 @@ Used when: News source fails to be accessed in Fasa 1.
 PRIMARY TOOL — BLOCKED
 ```
 
-Used when: Primary tool (Google Finance / MarketBeat / Finviz) fails in Fasa 2.
+Used when: Primary tool (Google Finance / MarketBeat / Finviz) fails in Phase 2.
 
 ## SEC EDGAR ERROR
 
@@ -24,7 +24,7 @@ Used when: Primary tool (Google Finance / MarketBeat / Finviz) fails in Fasa 2.
 BLOCKED — SEC EDGAR COULD NOT BE ACCESSED
 ```
 
-Used when: SEC EDGAR fails to be accessed in Fasa 2 or Fasa 3.
+Used when: SEC EDGAR fails to be accessed in Phase 2 or Phase 3.
 
 ## DATA MISSING
 
@@ -42,15 +42,13 @@ UNVERIFIED — SEC DATA NOT AVAILABLE
 
 Used when: SEC filing data cannot be retrieved or verified.
 
-## SEC DATA CONFLICT
+## SEC DATA VERIFIED
 
 ```text
-DATA MISMATCH — SEC OVERRIDE
+VERIFIED
 ```
 
-Used when: SEC is authoritative source and conflicts with primary tool or news source.
-
-Rule: SEC IS AUTHORITATIVE for financial filing data.
+Used when: SEC filing confirms the data.
 
 ## MECHANISM FAILED
 
@@ -58,7 +56,7 @@ Rule: SEC IS AUTHORITATIVE for financial filing data.
 REJECTED
 ```
 
-Used when: Transmission mechanism is not confirmed in Fasa 2 Stage 3.
+Used when: Transmission mechanism is not confirmed in Phase 2 analysis.
 
 ## LOW CONFIDENCE
 
@@ -74,7 +72,7 @@ Used when: Final confidence gate evaluates to Low. Opportunity excluded from rep
 No qualifying opportunities found for this trader profile and market focus.
 ```
 
-Used when: No opportunity passes Noise Gate in Fasa 1.
+Used when: No opportunity passes Noise Gate in Phase 1.
 
 Do NOT force-fill report.
 
@@ -91,4 +89,5 @@ Used when: News item has no identifiable ticker or public company. Discard immed
 - `NOT AVAILABLE` → data does not exist or cannot be reached
 - `UNVERIFIED` → data may exist but cannot be confirmed through SEC
 - `BLOCKED` → access to source or tool failed
+- `VERIFIED` → SEC filing confirms the data
 - These labels are MANDATORY — do not replace with loose descriptions

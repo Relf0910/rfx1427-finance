@@ -1,39 +1,39 @@
-# Fasa 3 — SEC EDGAR Verification (Opt-in Only)
+# Phase 3 — SEC EDGAR Verification (Opt-in Only)
 
 Source: Framework v3.1
 
 ## Overview
 
-Fasa 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification.
+Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification.
 
-**IMPORTANT: Fasa 3 is SEPARATE from Fasa 2. Fasa 2 does NOT include SEC.**
+**IMPORTANT: Phase 3 is SEPARATE from Phase 2. Phase 2 does NOT include SEC.**
 
-## FASA 3 — PERATURAN (WAJIB)
+## PHASE 3 — RULES (MANDATORY)
 
-1. **Hanya jalankan jika user opt-in**
-2. **Jika masih gagal** → label `UNVERIFIED — SEC DATA NOT AVAILABLE`
+1. **Only run if user opt-in**
+2. **If still fails** → label `UNVERIFIED — SEC DATA NOT AVAILABLE`
 3. Do NOT fabricate data
-4. **Tiada auto-proceed** — minta user setiap langkah
+4. **No auto-proceed** — ask user at every step
 
-## When Fasa 3 is Triggered
+## When Phase 3 is Triggered
 
 User explicitly asks:
-- "Jalankan SEC EDGAR Verification?"
-- "Verify dengan SEC"
+- "Run SEC EDGAR Verification?"
+- "Verify with SEC"
 - "SEC verification"
-- "Fasa 3"
+- "Phase 3"
 
 At STOP 2, ask user:
-> "Jalankan SEC EDGAR Verification?"
+> "Run SEC EDGAR Verification?"
 
 Options:
-- [Ya] → Proceed to Fasa 3
-- [Skip — Teruskan ke Fasa 4] → Proceed to Fasa 4
+- [Yes] → Proceed to Phase 3
+- [Skip — Continue to Phase 4] → Proceed to Phase 4
 - [Skip] → END
 
 ## STEP 3A — Fetch SEC EDGAR Data
 
-For each ticker from Fasa 1, access SEC EDGAR (sec.gov/edgar)
+For each ticker from Phase 1, access SEC EDGAR (sec.gov/edgar)
 
 ### Filing Types to Check
 
@@ -70,9 +70,9 @@ For each ticker:
 | **VERIFIED** | SEC filing confirms the data |
 | **UNVERIFIED — SEC DATA NOT AVAILABLE** | SEC data cannot be retrieved |
 
-## FASA 3 — OUTPUT FORMAT (LOCKED)
+## PHASE 3 — OUTPUT FORMAT (LOCKED)
 
-WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 
 ### PHASE 3 — SEC EDGAR VERIFICATION
 
@@ -120,5 +120,5 @@ WAIT FOR USER
 ```
 
 User options at STOP 3:
-- Request Fasa 4 (Ringkesan Bias)
+- Request Phase 4 (Weekly Bias Summary)
 - Skip → END

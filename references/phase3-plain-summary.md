@@ -1,43 +1,42 @@
-# Fasa 4 — Ringkesan Bias
+# Phase 4 — Weekly Bias Summary
 
-Source: Framework v3.0
+Source: Framework v3.1
 
 ## Overview
 
-Fasa 4 provides a plain, non-technical summary of opportunities with weekly bias direction. This is the final phase before END.
+Phase 4 provides a plain, non-technical summary of opportunities with weekly bias direction. This is the final phase before END.
 
-**Fasa 4 is: USER REQUEST ONLY**
+**Phase 4 is: USER REQUEST ONLY**
 
-**Output Style: LOCKED — Agora Dashboard (Tables + Cards)**
+**Output Style: LOCKED FORMAT**
 
-## FASA 4 — PERATURAN (WAJIB)
+## PHASE 4 — RULES (MANDATORY)
 
-**FORMAT INI LOCKED. AI WAJIB IKUT TEPAT. JANGAN UBAH APA-APA.**
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
-1. **Hanya 3 arah:** Positif / Negatif / Neutral (TIDAK ada MIXED)
-2. **Anggaran dalam range** (contoh: +3% to +8%)
-3. **Sebab ringkas maksimum 10 patah perkataan**
-4. **Setiap saham WAJIB ada tag:**
-   - `PREPARE FOR VOLUME BUY` (Positif)
-   - `BE CAREFUL — MARKET CRASH RISK` (Negatif)
+1. **Only 3 directions:** Positive / Negative / Neutral (NO MIXED)
+2. **Estimate in range** (example: +3% to +8%)
+3. **Reason maximum 10 words**
+4. **Every stock MUST have tag:**
+   - `PREPARE FOR VOLUME BUY` (Positive)
+   - `BE CAREFUL — MARKET CRASH RISK` (Negative)
    - `WAIT FOR CONFIRMATION` (Neutral)
-5. **WAJIB ada END OF SESSION table**
-6. **WAJIB ada NO MONITORING disclaimer**
-7. **JANGAN tambah apa-apa di luar format ini**
+5. **MUST have END OF SESSION table**
+6. **MUST have NO MONITORING disclaimer**
+7. **Do NOT add anything outside this format**
 
-## When Fasa 4 is Triggered
+## When Phase 4 is Triggered
 
 Trigger keywords:
-- "Buat ringkasan"
+- "Ringkasan"
 - "Summary"
 - "Phase 4"
-- "Ringkasan"
 - "Weekly bias"
 - "Fasa 4"
 
-Fasa 4 available after:
-- Fasa 2 completed (if user requests)
-- Fasa 3 completed or bypassed (if SEC failed, auto-proceed)
+Phase 4 available after:
+- Phase 2 completed (if user requests)
+- Phase 3 completed or bypassed
 
 ## Bias Categories & Tags
 
@@ -49,9 +48,9 @@ Fasa 4 available after:
 
 ---
 
-## FASA 4 — OUTPUT FORMAT (LOCKED)
+## PHASE 4 — OUTPUT FORMAT (LOCKED)
 
-WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+STRICTLY FOLLOW THIS FORMAT. Do not add anything outside this format.
 
 ```markdown
 # WEEKLY BIAS SUMMARY — [DATE]
@@ -106,7 +105,7 @@ Each session starts fresh.
 
 ---
 
-After Fasa 4 output:
+After Phase 4 output:
 ```text
 END
 ```
