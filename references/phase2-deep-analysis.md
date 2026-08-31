@@ -10,6 +10,12 @@ Fasa 2 performs detailed analysis on Phase 1 opportunities using user-selected p
 
 **Default Primary Tool: Google Finance** — If user does not choose, use Google Finance.
 
+## FASA 2 — PERATURAN (WAJIB)
+
+1. **FETCH STATUS must be shown** — SUCCESS / BLOCKED / UNVERIFIED
+2. **Do NOT invent data** — use NOT AVAILABLE, UNVERIFIED, BLOCKED
+3. **Do NOT give buy/sell signals** — use labels: POSITIVE / NEUTRAL / NEGATIVE
+
 ## STEP 2A — Primary Tool Selection
 
 Ask:
@@ -263,9 +269,10 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 | Field | Value |
 |-------|-------|
+| **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
 | Company | [COMPANY NAME] |
 | Primary Tool | [Google Finance / MarketBeat / Finviz] |
-| SEC Status | Verified / Unverified / Mismatch / SEC Only |
+| SEC Status | Verified / Unverified / Mismatch / SEC Only / BLOCKED |
 
 ### Data Comparison
 
@@ -276,6 +283,9 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 ### Catalyst
 [Factual summary with labels: FACT / INFERENCE / ESTIMATE]
+
+### Direction Signal
+**POSITIVE** / NEUTRAL / NEGATIVE (NOT a buy/sell signal)
 
 ### Mechanism
 **Confirmed** / Partially Confirmed / Rejected
@@ -307,7 +317,19 @@ WAIT FOR USER
 
 Do NOT proceed to Fasa 3 automatically.
 
-User options at STOP 2:
-- Proceed to Fasa 3 (SEC EDGAR Verification)
-- Proceed to Fasa 4 (Ringkesan Bias) — only if requested
-- Skip → END
+### Fasa 3 Trigger Condition
+
+Fasa 3 is ONLY available if SEC EDGAR in Fasa 2 shows:
+- `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED`
+- `UNVERIFIED — SEC DATA NOT AVAILABLE`
+
+If SEC Status is `BLOCKED` or `UNVERIFIED`, ask user:
+> "SEC EDGAR verification gagal di Fasa 2. Cuba semula di Fasa 3?"
+
+Options:
+- [Ya, Cuba Semula] → Proceed to Fasa 3
+- [Skip — Teruskan ke Fasa 4] → Proceed to Fasa 4
+- [Skip] → END
+
+If SEC Status is `VERIFIED` or `MATCH`:
+→ Fasa 3 is NOT available. User can only proceed to Fasa 4 or END.

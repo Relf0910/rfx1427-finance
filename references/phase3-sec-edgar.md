@@ -4,17 +4,27 @@ Source: Framework v3.0
 
 ## Overview
 
-Fasa 3 provides explicit SEC EDGAR verification for opportunities where Fasa 2 failed or where user explicitly requests SEC EDGAR verification.
+Fasa 3 provides explicit SEC EDGAR verification for opportunities where Fasa 2 failed.
 
 **Fasa 3 is: OPT-IN ONLY**
 
-**Trigger Condition:** Fasa 2 fails OR user explicitly requests SEC verification
+**Trigger Condition:** SEC EDGAR in Fasa 2 shows `BLOCKED` or `UNVERIFIED`
 
 ## When Fasa 3 is Triggered
 
-1. Fasa 2 Primary Tool is BLOCKED
-2. Fasa 2 produced LOW CONFIDENCE for all opportunities
-3. User explicitly requests: "Verify dengan SEC EDGAR"
+Fasa 3 is ONLY activated when SEC EDGAR in Fasa 2 returns:
+- `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED`
+- `UNVERIFIED — SEC DATA NOT AVAILABLE`
+
+At STOP 2, ask user:
+> "SEC EDGAR verification gagal di Fasa 2. Cuba semula di Fasa 3?"
+
+Options:
+- [Ya, Cuba Semula]
+- [Skip — Teruskan ke Fasa 4]
+
+If user selects "Ya, Cuba Semula" → Proceed to Fasa 3
+If user selects "Skip" → Proceed to Fasa 4 or END
 
 ## STEP 3A — Identify Opportunities for Verification
 
@@ -97,7 +107,7 @@ For each opportunity:
 
 ---
 
-## FASA 3 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+## FASA 3 — OUTPUT FORMAT (LOCKED — SEC VERIFICATION)
 
 WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
@@ -112,6 +122,7 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 | Field | Value |
 |-------|-------|
+| **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
 | Company | [COMPANY NAME] |
 | SEC Access | SUCCESS / BLOCKED |
 | Last Filing Checked | [Filing type] on [Date] |
