@@ -14,11 +14,16 @@ Fasa 4 provides a plain, non-technical summary of opportunities with weekly bias
 
 **FORMAT INI LOCKED. AI WAJIB IKUT TEPAT. JANGAN UBAH APA-APA.**
 
-## Purpose
-
-- Translate technical analysis into actionable language
-- Provide weekly bias direction (not trading advice)
-- Keep it simple, factual, no jargon
+1. **Hanya 3 arah:** Positif / Negatif / Neutral (TIDAK ada MIXED)
+2. **Anggaran dalam range** (contoh: +3% to +8%)
+3. **Sebab ringkas maksimum 10 patah perkataan**
+4. **Setiap saham WAJIB ada tag:**
+   - `PREPARE FOR VOLUME BUY` (Positif)
+   - `BE CAREFUL — MARKET CRASH RISK` (Negatif)
+   - `WAIT FOR CONFIRMATION` (Neutral)
+5. **WAJIB ada END OF SESSION table**
+6. **WAJIB ada NO MONITORING disclaimer**
+7. **JANGAN tambah apa-apa di luar format ini**
 
 ## When Fasa 4 is Triggered
 
@@ -34,60 +39,19 @@ Fasa 4 available after:
 - Fasa 2 completed (if user requests)
 - Fasa 3 completed or bypassed (if SEC failed, auto-proceed)
 
-## Bias Categories
+## Bias Categories & Tags
 
-| Bias | Meaning |
-| --- | --- |
-| **POSITIVE** | Catalysts identified that may support upside |
-| **NEGATIVE** | Catalysts identified that may pressure downside |
-| **NEUTRAL** | No clear directional catalyst |
-| **MIXED** | Conflicting catalysts present |
-
-## Direction Language
-
-### POSITIVE
-
-> WEEKLY BIAS: UPSIDE POTENTIAL
-> Catalyst: [brief factual description]
-
-### NEGATIVE
-
-> WEEKLY BIAS: DOWNSIDE RISK
-> Catalyst: [brief factual description]
-
-### NEUTRAL
-
-> WEEKLY BIAS: NO CLEAR DIRECTION
-> Catalyst: [brief factual description]
-
-### MIXED
-
-> WEEKLY BIAS: MIXED SIGNALS
-> Catalyst: [brief factual description]
-
-## Estimate Rule
-
-If estimated change is provided:
-
-> **Estimate, not prediction.**
-
-Estimate cannot be presented as:
-- Guaranteed result
-- Certain return
-- Guaranteed price movement
-
-If sufficient basis not available:
-```text
-N/A
-```
+| Bias | Tag | Meaning |
+|------|-----|---------|
+| **POSITIVE** | PREPARE FOR VOLUME BUY | Catalysts identified that may support upside |
+| **NEGATIVE** | BE CAREFUL — MARKET CRASH RISK | Catalysts identified that may pressure downside |
+| **NEUTRAL** | WAIT FOR CONFIRMATION | No clear directional catalyst |
 
 ---
 
-## FASA 4 — OUTPUT FORMAT (LOCKED — AGORA STYLE)
+## FASA 4 — OUTPUT FORMAT (LOCKED)
 
 WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
-
-### Agora Dashboard — Weekly Bias Summary
 
 ```markdown
 # WEEKLY BIAS SUMMARY — [DATE]
@@ -100,9 +64,10 @@ Language: [English / Bahasa Melayu]
 | Field | Value |
 |-------|-------|
 | Company | [COMPANY NAME] |
-| Weekly Bias | **POSITIVE** / NEGATIVE / NEUTRAL / MIXED |
-| Est. Change | [+/-X%] or N/A |
-| Primary Catalyst | [Brief factual description] |
+| Direction | **POSITIVE** / NEGATIVE / NEUTRAL |
+| Est. Range | [+X% to +Y%] / [-X% to -Y%] / N/A |
+| Reason | [Max 10 words factual reason] |
+| Tag | **PREPARE FOR VOLUME BUY** / BE CAREFUL — MARKET CRASH RISK / WAIT FOR CONFIRMATION |
 
 ### Key Points
 - [Point 1 — FACT / INFERENCE]
@@ -118,21 +83,28 @@ Language: [English / Bahasa Melayu]
 
 ---
 
-## Summary Table
+## END OF SESSION TABLE
 
 ```markdown
-## BIAS OVERVIEW
+## END OF SESSION
 
-| Ticker | Bias | Est. Change | Primary Catalyst |
-|--------|------|-------------|------------------|
-| XXX | **POSITIVE** | +X% | [Brief] |
-| XXX | NEGATIVE | -X% | [Brief] |
-| XXX | NEUTRAL | — | [Brief] |
-```
+| Ticker | Direction | Est. Range | Tag |
+|--------|-----------|------------|-----|
+| XXX | **POSITIVE** | +X% to +Y% | PREPARE FOR VOLUME BUY |
+| XXX | NEGATIVE | -X% to -Y% | BE CAREFUL — MARKET CRASH RISK |
+| XXX | NEUTRAL | N/A | WAIT FOR CONFIRMATION |
 
 ---
 
-## Penutup
+**NO MONITORING**
+
+This session has ended. No watchlist, no alerts, no continuous monitoring.
+Each session starts fresh.
+
+---
+```
+
+---
 
 After Fasa 4 output:
 ```text

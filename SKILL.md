@@ -9,6 +9,20 @@ Financial News Scanner + Deep Analysis + SEC Verification + Plain Summary framew
 
 ## Version 3.0 — Master Framework (4 Fasa)
 
+## Core Principle
+
+```text
+SCAN (Fasa 1)
+   ↓
+FETCH + VERIFY (Fasa 2)
+   ↓
+SEC CATCH-UP (Fasa 3)
+   ↓
+SUMMARISE (Fasa 4)
+   ↓
+END
+```
+
 ## Core Principles
 
 - **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
@@ -55,19 +69,58 @@ FASA 4 — RINGKASAN BIAS (LOCKED — Agora Style)
 END
 ```
 
-## Global Gate Rules (Wajib)
+---
 
-1. One question at a time
-2. Complete Intake before Fasa 1
-3. NO TICKER = NOISE
-4. Materiality >= 3
-5. Confidence >= Medium
-6. Horizon Fit != Poor
-7. Max 7 opportunities
-8. Fasa 2 and Fasa 3 opt-in only
-9. Fasa 4 only if user requests
-10. NO LOOP, NO MONITOR, NO AUTO-PROCEED
-11. Never invent data. Never use training data to replace fetch
+# ====================================================================
+# WEBFETCH ENFORCEMENT — WAJIB PATUH
+# ====================================================================
+
+1. AI **WAJIB fetch data SEBELUM analysis**
+2. AI **tidak boleh skip fetch**
+3. AI **tidak boleh gunakan training knowledge** untuk menggantikan current tool data
+4. Primary Tool blocked → label: `PRIMARY TOOL — BLOCKED`
+5. SEC blocked/unavailable → label: `UNVERIFIED — SEC DATA NOT AVAILABLE`
+6. **Jangan claim verification tanpa fetch**
+7. **Jangan invent missing data**
+8. Jika Primary + SEC **kedua-duanya gagal** → `FETCH FAILED — ANALYSIS SKIPPED`
+
+---
+
+# ====================================================================
+# MASTER HARD RULES (29)
+# ====================================================================
+
+1. One question at a time.
+2. Complete Intake before Fasa 1.
+3. No ticker = noise.
+4. Materiality < 3 = reject.
+5. Confidence < Medium in Fasa 1 = reject.
+6. Poor Horizon Fit = reject.
+7. Maximum 7 Fasa 1 opportunities.
+8. Fasa 2 requires explicit opt-in.
+9. User chooses Primary Tool (Google Finance default).
+10. SEC EDGAR is mandatory verification partner.
+11. Stage 1 → Stage 2 → Stage 3 (Fasa 2).
+12. Fetch before analysis.
+13. No fabricated data.
+14. No training data replacing required current fetch.
+15. SEC override only for SEC-authoritative items.
+16. Missing SEC data = Unverified.
+17. Missing data = Not Available.
+18. Rejected mechanism = Skip.
+19. Low final confidence = Skip.
+20. Fasa 3 only if SEC failed in Fasa 2.
+21. Fasa 4 only when user asks.
+22. No automatic phase transition.
+23. No loop.
+24. No watchlist.
+25. No monitoring.
+26. No buy/sell instruction.
+27. No guaranteed prediction.
+28. Every session starts fresh.
+29. Format Fasa 1, 2, 3, 4 are LOCKED. Jangan ubah.
+
+---
 
 ## Gate 0 — Intake (3 Questions)
 
@@ -190,7 +243,7 @@ Ask: "Apa primary tool untuk deep analysis?"
 
 ## Fasa 3 — SEC EDGAR Verification (Jika Fasa 2 Gagal)
 
-Triggered ONLY if Fasa 2 fails or user requests explicit SEC verification.
+Triggered ONLY if SEC EDGAR in Fasa 2 shows `BLOCKED` or `UNVERIFIED`.
 
 ---
 
@@ -226,6 +279,7 @@ ESTIMATE
 | Mechanism fails | `REJECTED` |
 | Confidence Low | `LOW CONFIDENCE — SKIP` |
 | No opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
+| Both Primary + SEC fail | `FETCH FAILED — ANALYSIS SKIPPED` |
 
 ## Opportunity Lifecycle
 
@@ -241,10 +295,10 @@ Any hard gate fails → `STOP / SKIP`
 | Fasa 1 Scanner | `references/phase1-scanner.md` |
 | Fasa 2 Deep Analysis | `references/phase2-deep-analysis.md` |
 | Fasa 3 SEC EDGAR Verification | `references/phase3-sec-edgar.md` |
-| Fasa 4 Ringkesan Bias | `references/phase4-ringkesan-bias.md` |
+| Fasa 4 Ringkesan Bias | `references/phase3-plain-summary.md` |
 | Error States | `references/error-states.md` |
 | Data Integrity Hierarchy | `references/data-integrity-hierarchy.md` |
-| Hard Rules Master (37) | `references/hard-rules-master.md` |
+| Hard Rules Master | `references/hard-rules-master.md` |
 | Decision Tree | `references/decision-tree.md` |
 | Acceptance Tests | `references/acceptance-tests.md` |
 
