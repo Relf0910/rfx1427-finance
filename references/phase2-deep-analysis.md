@@ -1,80 +1,62 @@
-# Phase 2 — Deep Analysis
+# Phase 2 — Deep Analysis (Primary Tool Only, NO SEC)
 
-Sumber: framework v2.2, Seksyen 8.
+Source: Framework v3.1
 
-Phase 2 ialah: `OPT-IN ONLY`.
+## Overview
 
-## STEP 2A — Tool Selection
+Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool ONLY**.
 
-Tanya:
+**IMPORTANT: No SEC EDGAR in Phase 2. SEC is handled in Phase 3 separately.**
 
-> Continue to Phase 2 — Deep Analysis?
+**Phase 2 is: OPT-IN ONLY**
 
-Pilihan:
+**Default Primary Tool: Google Finance** — If user does not choose, use Google Finance.
 
-1. Finviz
-2. Google Finance
-3. MarketBeat
-4. Skip Deep Analysis
+## PHASE 2 — RULES (MANDATORY)
+
+1. **FETCH STATUS must be shown** — SUCCESS / BLOCKED / UNVERIFIED
+2. **Do NOT invent data** — use NOT AVAILABLE, UNVERIFIED, BLOCKED
+3. **Do NOT give buy/sell signals** — use labels: POSITIVE / NEUTRAL / NEGATIVE
+4. **NO SEC in Phase 2** — SEC is handled in Phase 3 (separate opt-in phase)
+
+## STEP 2A — Primary Tool Selection
+
+Ask:
+
+> "What primary tool for deep analysis?"
+
+Options:
+- [Google Finance (Default)] [Finviz] [MarketBeat] [Skip]
+
+→ If user does not choose, USE GOOGLE FINANCE AS DEFAULT.
 
 ### Action
 
-Jika pilih 1–3:
-
+If selects tool:
 ```text
 primary_tool = selected tool
 ```
+Proceed to Step 2B.
 
-Proceed ke Step 2B.
-
-Jika pilih 4:
-
+If selects Skip:
 ```text
 END SESSION
 ```
 
-### Hard Rule
+### Hard Rules
 
-- Jangan pilih tool bagi pihak user.
-- Jangan jalankan Phase 2 tanpa opt-in.
-- Jangan offer Phase 2 semula selepas Skip.
-- SEC EDGAR tidak perlu dipilih secara berasingan — ia mandatory verification partner.
+- Do NOT select tool for user
+- Do NOT run Phase 2 without opt-in
+- Do NOT offer Phase 2 again after Skip
+- **No SEC EDGAR in Phase 2** — SEC verification is Phase 3 (separate opt-in)
 
-## STEP 2B — 3-Stage Verification
+## STEP 2B — Fetch Primary Data
 
-```text
-STAGE 1
-   ↓
-STAGE 2
-   ↓
-STAGE 3
-```
+Fetch data from selected Primary Tool for **EVERY PHASE 1 OPPORTUNITY**.
 
-Stage seterusnya hanya bermula selepas stage sebelumnya selesai.
+### GOOGLE FINANCE
 
-### STAGE 1 — Fetch Primary Tool Data
-
-Fetch data untuk: `EVERY PHASE 1 OPPORTUNITY`.
-
-#### FINVIZ
-
-Fetch jika tersedia:
-
-- Current price
-- Price change %
-- Volume
-- RSI
-- SMA 20
-- SMA 50
-- P/E
-- EPS
-- Revenue
-- Relevant news headlines
-
-#### GOOGLE FINANCE
-
-Fetch jika tersedia:
-
+Fetch if available:
 - Current price
 - Price change %
 - Recent news
@@ -82,241 +64,198 @@ Fetch jika tersedia:
 - Analyst ratings
 - Earnings data
 
-#### MARKETBEAT
+### FINVIZ
 
-Fetch jika tersedia:
+Fetch if available:
+- Current price
+- Price change %
+- Volume
+- RSI
+- SMA 20, SMA 50
+- P/E, EPS
+- Revenue
+- Relevant news headlines
 
+### MARKETBEAT
+
+Fetch if available:
 - Current price
 - Price change %
 - Short interest
 - Analyst consensus
 - Financial ratios
 
-#### Primary Data Rule
+### Primary Data Rules
 
-Jika field tidak tersedia:
-
-```text
-PRIMARY DATA — NOT AVAILABLE
-```
-
-Jangan invent.
-
-Jika primary tool gagal:
-
-```text
-PRIMARY TOOL — BLOCKED
-```
-
-Jangan claim data telah fetched.
-
-Internal state: `PRIMARY DATA FETCHED — [TOOL]` (tidak perlu output kepada user).
-
-### STAGE 2 — Fetch SEC EDGAR Data
-
-Hanya selepas Stage 1 selesai. Gunakan ticker daripada Phase 1 / Stage 1.
-
-#### SEC Verification Matrix
-
-| Item | Filing |
-| --- | --- |
-| Revenue | 10-Q / 10-K |
-| Net Income / EPS | 10-Q / 10-K |
-| Total Debt | 10-Q / 10-K |
-| Cash Flow | 10-Q / 10-K |
-| Insider Transactions | Form 4 |
-| Outstanding Shares | 10-Q / 10-K |
-| Material Events | 8-K |
-
-#### SEC Data States
-
-**VERIFIED** — jika SEC filing menyediakan data:
-
-```text
-SEC_DATA
-```
-
-Rekod: filing type, filing date, relevant period, value, filing reference.
-
-**UNVERIFIED** — jika SEC data tidak tersedia:
-
-```text
-UNVERIFIED — SEC DATA NOT AVAILABLE
-```
-
-#### Hard Rule
-
-```text
-NO SEC DATA ≠ FALSE
-```
-
-Ia bermaksud `UNVERIFIED`. Jangan paksa verification.
-
-Internal state: `SEC DATA FETCHED — [VERIFIED / UNVERIFIED]` (tidak perlu output kepada user).
-
-### STAGE 3 — Compare, Analyze & Synthesize
-
-Hanya selepas Stage 1 dan Stage 2 selesai. AI kini boleh:
-
-1. Compare
-2. Verify
-3. Confirm mechanism
-4. Assess timing
-5. Identify levels
-6. Apply confidence gate
-
-#### Data Authority Rule
-
-SEC EDGAR ialah authority untuk financial filing data. Primary tool untuk market/technical/analyst data yang SEC tidak direka untuk menyediakan.
-
-Contoh primary tool data: Current price, intraday change, volume, RSI, VWAP, technical indicators, analyst targets, analyst consensus.
-
-#### Comparison Rules
-
-| Situation | Status | Action |
-| --- | --- | --- |
-| Primary = SEC | MATCH — CONFIRMED | Use data |
-| Primary ≠ SEC, SEC authoritative | DATA MISMATCH — SEC OVERRIDE | Use SEC |
-| SEC unavailable | UNVERIFIED | Use Primary + label |
-| Primary unavailable, SEC available | SEC ONLY | Use SEC |
-| Both unavailable | DATA NOT AVAILABLE | Do not use |
-
-### STEP 3.1 — Confirm Mechanism
-
-Semak transmission channel daripada Phase 1.
-
-Output:
-
-- Confirmed
-- Partially Confirmed
-- Rejected
-
-Jika `Rejected`, opportunity tidak boleh dipersembahkan sebagai valid opportunity.
-
-### STEP 3.2 — Assess Timing
-
-Match dengan trader profile:
-
-- **SCALPER** → `5–15 minutes`
-- **INTRADAY** → `Current session`
-- **SWING** → `Days → weeks`
-- **INVESTOR** → `Long-term`
-
-Output: Strong / Partial / Poor.
-
-### STEP 3.3 — Identify Price Levels
-
-#### SCALPER
-
-- Pre-market high
-- Pre-market low
-- R1
-- R2
-
-#### INTRADAY
-
-- VWAP
-- Opening Range High
-- Opening Range Low
-
-#### SWING
-
-- 20-day SMA
-- 50-day SMA
-- Recent swing high
-- Recent swing low
-
-#### INVESTOR
-
-- 52-week range
-- Current P/E
-- Historical valuation
-- 5-year average P/E if available
-
-#### Price Level Integrity Rule
-
-Jika data tidak tersedia:
-
+If field not available:
 ```text
 NOT AVAILABLE
 ```
 
-Jangan invent angka. Jangan claim exact level jika source tidak menyokongnya.
+Do NOT invent.
 
-### STEP 3.4 — Confidence Gate
-
-Selepas semua verification:
-
+If primary tool fails:
 ```text
-High
-Medium
-Low
+PRIMARY TOOL — BLOCKED
 ```
+
+Do NOT claim data was fetched.
+
+Internal state: `PRIMARY DATA FETCHED — [TOOL]`
+
+---
+
+## STEP 2C — Analyze & Synthesize
+
+Only after all Primary Data is fetched.
+
+AI analysis tasks:
+1. Verify catalyst from Phase 1
+2. Confirm transmission mechanism
+3. Assess timing fit with trader profile
+4. Identify relevant price levels
+5. Apply confidence gate
+
+### Timing Fit
+
+Match with trader profile:
+
+| Profile | Timing |
+| --- | --- |
+| SCALPER | 5–15 minutes |
+| INTRADAY | Current session |
+| SWING | Days → weeks |
+| INVESTOR | Long-term |
+
+Output: Strong / Partial / Poor
+
+### Price Levels
+
+| Profile | Levels |
+| --- | --- |
+| SCALPER | Pre-market high, Pre-market low, R1, R2 |
+| INTRADAY | VWAP, Opening Range High, Opening Range Low |
+| SWING | 20-day SMA, 50-day SMA, Recent swing high/low |
+| INVESTOR | 52-week range, Current P/E, Historical valuation |
+
+### Price Level Integrity Rule
+
+If data not available:
+```text
+NOT AVAILABLE
+```
+
+Do NOT invent numbers. Do NOT claim exact level if source does not support it.
+
+### Confidence Gate
+
+After analysis:
+- High
+- Medium
+- Low
 
 #### Low Confidence
 
-Jika `Confidence = Low`:
-
+If `Confidence = Low`:
 ```text
 LOW CONFIDENCE — SKIP
 ```
 
-Jangan masukkan ke final Deep Analysis report.
+Do NOT include in final Deep Analysis report.
 
 #### If All Opportunities Are Low
 
 Output:
-
 > No opportunities passed the final confidence gate.
 
-Jangan force-fill report.
+Do NOT force-fill report.
 
-## Phase 2 Final Output
+---
+
+# PHASE 2 — DEEP ANALYSIS (LOCKED FORMAT)
+
+**THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
+
+Output must begin with:
 
 ```markdown
-# DEEP ANALYSIS — [DATE]
+**PHASE 2 — DEEP ANALYSIS**
+Primary Tool: **[Google Finance / Finviz / MarketBeat]**
+Akses: [DATE TIME]
+```
 
-## [COMPANY] ([TICKER])
+Then the four mandatory blocks in this order:
 
-**Primary Tool:**
-Finviz / Google Finance / MarketBeat
+### 1. Primary Data Summary
 
-**SEC Verification:**
-Verified / Unverified / Mismatch / SEC Only
+```markdown
+| Ticker | Company | Primary Tool | Fetch Status |
+|--------|---------|--------------|--------------|
+| Stock X | [Name] | [Tool] | SUCCESS / BLOCKED / UNVERIFIED |
+| Stock Y | [Name] | [Tool] | SUCCESS / BLOCKED / UNVERIFIED |
+```
 
-**Data Comparison:**
+### 2. Catalyst Verification
 
-* [Item 1]: Primary [X] | SEC [Y] → Match / Mismatch / Unverified
-* [Item 2]: Primary [X] | SEC [Y] → Match / Mismatch / Unverified
+```markdown
+| Ticker | Phase 1 Catalyst | Verified | Notes |
+|--------|------------------|----------|-------|
+| Stock X | [Short description] | YES / PARTIAL / NO | [Notes] |
+| Stock Y | [Short description] | YES / PARTIAL / NO | [Notes] |
+```
 
-**Catalyst:**
-[...]
+### 3. Deep Analysis Reports
 
-**Mechanism:**
-Confirmed / Partially Confirmed / Rejected
+For each ticker that passed the confidence gate, output:
 
-**Timing Fit:**
-Strong / Partial / Poor
+```markdown
+## [TICKER] — [COMPANY]
 
-**Relevant Levels:**
-[...]
+| Field | Value |
+|-------|-------|
+| **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
+| Primary Tool | [Tool] |
+| Direction | **POSITIVE** / NEUTRAL / NEGATIVE |
 
-**Confidence:**
-High / Medium
+### Catalyst
+[Factual summary with FACT / INFERENCE / ESTIMATE labels]
 
-**Risk / Uncertainty:**
-[...]
+### Timing Fit
+**Strong** / Partial / Poor (matched to [Profile])
+
+### Relevant Levels
+- [Level description]: [Value or NOT AVAILABLE]
+- [Level description]: [Value or NOT AVAILABLE]
+
+### Confidence
+**HIGH** / MEDIUM
+
+### Risk / Uncertainty
+[Short risk note]
 
 ---
 ```
 
-## STOP 2
+### 4. Ranking Summary
 
-Selepas Phase 2:
+```markdown
+| Rank | Ticker | Direction | Confidence | Timing Fit |
+|------|--------|-----------|------------|------------|
+| 1 | Stock X | POSITIVE | HIGH | Strong |
+| 2 | Stock Y | NEGATIVE | MEDIUM | Partial |
+```
+
+End Phase 2 with exactly:
 
 ```text
 STOP
 WAIT FOR USER
 ```
 
-Jangan jalankan Phase 3 secara automatik.
+## Hard Rules for Phase 2
+
+1. Never skip a required table or section
+2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
+3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+4. Keep the exact markdown structure, bold labels, and stop phrases shown above
+5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

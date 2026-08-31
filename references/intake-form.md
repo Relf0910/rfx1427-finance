@@ -1,68 +1,70 @@
 # Intake Form (Gate 0)
 
-Sumber: framework v2.2, Seksyen 5 & 6.
+Source: Framework v3.1
 
-Intake mempunyai **3 soalan** sahaja. Tanya **satu per satu** — jangan tanya semua serentak (Rule 1). Jika mana-mana field belum lengkap, **WAIT** (Rule 2).
+## Overview
+
+Intake has **3 questions only**. Ask **one at a time** — do not ask all at once (Rule 1). If any field is incomplete, **WAIT** (Rule 2).
 
 ## Q1 — Output Language
 
-Tanya:
+Ask:
 
-> Apa bahasa untuk output?
+> "What language for output?"
 
-Pilihan:
+Options:
 
 - English
 - Bahasa Melayu
 - Other
 
-Rekod sebagai: `output_language`
+Record as: `output_language`
 
 ## Q2 — Trader Profile
 
-Tanya:
+Ask:
 
-> Apa trader profile?
+> "What trader profile?"
 
-Pilihan:
+Options:
 
 - Scalper
 - Intraday
 - Swing
 - Investor
 
-Rekod sebagai: `trader_profile`
+Record as: `trader_profile`
 
 ## Q3 — Market Focus
 
-Tanya:
+Ask:
 
-> Apa market focus?
+> "What market focus?"
 
-Pilihan:
+Options:
 
 - US
 - Singapore
 - Malaysia
 - Other
 
-Rekod sebagai: `market`
+Record as: `market`
 
 ## Intake Complete
 
-Selepas ketiga-tiga field lengkap:
+After all three fields are complete:
 
 ```text
 Language: X | Profile: X | Market: X
 ```
 
-Kemudian:
+Then:
 
 ```text
 PROCEED → PHASE 1
 ```
 
-Jika salah satu field belum lengkap:
+If any field is incomplete:
 
 ```text
 WAIT
@@ -70,4 +72,4 @@ WAIT
 
 ## Hard Gate
 
-Jangan terus ke Phase 1 jika mana-mana soalan belum dijawab. Ulang soalan yang tertinggal, satu per satu.
+Do not proceed to Phase 1 if any question is unanswered. Repeat the unanswered question, one at a time.
