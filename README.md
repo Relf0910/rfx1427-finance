@@ -1,22 +1,22 @@
 # RFX1427 Finance
 
-AI financial news scanner dan analysis framework dengan kawalan gate yang ketat, berteraskan fakta, dan verifikasi rasmi SEC EDGAR.
+AI financial news scanner and analysis framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Gambaran Keseluruhan
+## Overview
 
-RFX1427 Finance membaca SATU news source pilihan user, menapis public companies mengikut trader profile, market focus, time horizon, materiality dan confidence, dan menjalankan Deep Analysis dengan verification SEC EDGAR hanya selepas opt-in eksplisit.
+RFX1427 Finance reads ONE news source selected by the user, filters public companies by trader profile, market focus, time horizon, materiality, and confidence, and performs Deep Analysis with SEC EDGAR verification only after explicit user opt-in.
 
-## Prinsip Teras
+## Core Principles
 
-- **Source Fact → Verification → AI Analysis → Estimate** — empat lapisan sentiasa dibezakan
-- **NO FABRICATION** — jangan reka data. Guna `NOT AVAILABLE`, `UNVERIFIED`, atau `BLOCKED`
-- **OPT-IN ONLY** — Phase 2 & 3 hanya selepas user memilih secara eksplisit
-- **READ-ONLY ANALYSIS** — bukan trading advisor. Tiada buy/sell, entry, stop-loss
+- **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
+- **NO FABRICATION** — never fabricate data. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED`
+- **OPT-IN ONLY** — Phase 2 & 3 only after user explicitly selects
+- **READ-ONLY ANALYSIS** — not a trading advisor. No buy/sell, entry, stop-loss
 
-## Aliran Kerja
+## Workflow
 
 ```
-GATE 0 — INTAKE (3 soalan)
+GATE 0 — INTAKE (3 questions)
     │
     ▼
 PHASE 1 — SCANNER (News → Ticker Filter → Profile Filter → Materiality → Confidence → Phase 1 Report)
@@ -48,9 +48,9 @@ AI INFERENCE
 ESTIMATE
 ```
 
-## Rujukan
+## References
 
-| Fasa | Fail |
+| Phase | File |
 |---|---|
 | Gate 0 Intake | `references/intake-form.md` |
 | Phase 1 Scanner | `references/phase1-scanner.md` |
@@ -84,6 +84,6 @@ rfx1427-finance/
 
 ## Status
 
-Versi: **2.2** (DRAFT)
+Version: **2.2** (DRAFT)
 
-Baca `SKILL.md` untuk dokumentasi lengkap.
+See `SKILL.md` for complete documentation.
