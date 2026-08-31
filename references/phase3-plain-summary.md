@@ -10,18 +10,29 @@ Fasa 4 provides a plain, non-technical summary of opportunities with weekly bias
 
 **Output Style: LOCKED — Agora Dashboard (Tables + Cards)**
 
+## FASA 4 — PERATURAN (WAJIB)
+
+**FORMAT INI LOCKED. AI WAJIB IKUT TEPAT. JANGAN UBAH APA-APA.**
+
 ## Purpose
 
 - Translate technical analysis into actionable language
 - Provide weekly bias direction (not trading advice)
 - Keep it simple, factual, no jargon
 
-## When Fasa 4 is Available
+## When Fasa 4 is Triggered
 
-After Fasa 2 or Fasa 3 completion:
-- User requests: "Ringkesan" / "Summary" / "Plain summary"
-- User requests: "Weekly bias"
-- User requests: "Fasa 4"
+Trigger keywords:
+- "Buat ringkasan"
+- "Summary"
+- "Phase 4"
+- "Ringkasan"
+- "Weekly bias"
+- "Fasa 4"
+
+Fasa 4 available after:
+- Fasa 2 completed (if user requests)
+- Fasa 3 completed or bypassed (if SEC failed, auto-proceed)
 
 ## Bias Categories
 

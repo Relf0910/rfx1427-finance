@@ -10,6 +10,12 @@ Fasa 3 provides explicit SEC EDGAR verification for opportunities where Fasa 2 f
 
 **Trigger Condition:** SEC EDGAR in Fasa 2 shows `BLOCKED` or `UNVERIFIED`
 
+## FASA 3 — PERATURAN (WAJIB)
+
+1. **Hanya jalankan jika user opt-in**
+2. **Jika masih gagal** → label `UNVERIFIED — SEC DATA NOT AVAILABLE` dan teruskan ke Fasa 4
+3. Do NOT fabricate data
+
 ## When Fasa 3 is Triggered
 
 Fasa 3 is ONLY activated when SEC EDGAR in Fasa 2 returns:
@@ -146,9 +152,13 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 ---
 ```
 
-## STEP 3E — Trigger Fasa 4 or End
+## STEP 3E — Continue to Fasa 4 or End
 
 After Fasa 3 report:
+
+If Fasa 3 SEC verification still fails:
+→ Label: `UNVERIFIED — SEC DATA NOT AVAILABLE`
+→ Proceed to Fasa 4 automatically
 
 If user requests Fasa 4:
 ```text
@@ -168,5 +178,5 @@ WAIT FOR USER
 ```
 
 User options at STOP 3:
-- Proceed to Fasa 4 (Ringkesan Bias)
+- Proceed to Fasa 4 (Ringkesan Bias) — only if Fasa 3 succeeded
 - Skip → END
