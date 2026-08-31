@@ -1,49 +1,39 @@
-# Fasa 3 — SEC EDGAR Verification
+# Fasa 3 — SEC EDGAR Verification (Opt-in Only)
 
-Source: Framework v3.0
+Source: Framework v3.1
 
 ## Overview
 
-Fasa 3 provides explicit SEC EDGAR verification for opportunities where Fasa 2 failed.
+Fasa 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification.
 
-**Fasa 3 is: OPT-IN ONLY**
-
-**Trigger Condition:** SEC EDGAR in Fasa 2 shows `BLOCKED` or `UNVERIFIED`
+**IMPORTANT: Fasa 3 is SEPARATE from Fasa 2. Fasa 2 does NOT include SEC.**
 
 ## FASA 3 — PERATURAN (WAJIB)
 
 1. **Hanya jalankan jika user opt-in**
-2. **Jika masih gagal** → label `UNVERIFIED — SEC DATA NOT AVAILABLE` dan teruskan ke Fasa 4
+2. **Jika masih gagal** → label `UNVERIFIED — SEC DATA NOT AVAILABLE`
 3. Do NOT fabricate data
+4. **Tiada auto-proceed** — minta user setiap langkah
 
 ## When Fasa 3 is Triggered
 
-Fasa 3 is ONLY activated when SEC EDGAR in Fasa 2 returns:
-- `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED`
-- `UNVERIFIED — SEC DATA NOT AVAILABLE`
+User explicitly asks:
+- "Jalankan SEC EDGAR Verification?"
+- "Verify dengan SEC"
+- "SEC verification"
+- "Fasa 3"
 
 At STOP 2, ask user:
-> "SEC EDGAR verification gagal di Fasa 2. Cuba semula di Fasa 3?"
+> "Jalankan SEC EDGAR Verification?"
 
 Options:
-- [Ya, Cuba Semula]
-- [Skip — Teruskan ke Fasa 4]
+- [Ya] → Proceed to Fasa 3
+- [Skip — Teruskan ke Fasa 4] → Proceed to Fasa 4
+- [Skip] → END
 
-If user selects "Ya, Cuba Semula" → Proceed to Fasa 3
-If user selects "Skip" → Proceed to Fasa 4 or END
+## STEP 3A — Fetch SEC EDGAR Data
 
-## STEP 3A — Identify Opportunities for Verification
-
-From Phase 1 opportunities, select those that:
-- Have identifiable tickers
-- Are relevant to market focus
-- Could benefit from SEC verification
-
-Maximum: **7 opportunities**
-
-## STEP 3B — Fetch SEC EDGAR Data
-
-For each selected opportunity, access SEC EDGAR (sec.gov/edgar)
+For each ticker from Fasa 1, access SEC EDGAR (sec.gov/edgar)
 
 ### Filing Types to Check
 
@@ -57,7 +47,7 @@ For each selected opportunity, access SEC EDGAR (sec.gov/edgar)
 | Outstanding Shares | 10-K, 10-Q | Balance sheet |
 | Material Events | 8-K | Recent events |
 
-### SEC Access Rule
+### SEC Access Rules
 
 If SEC EDGAR fails to access:
 ```text
@@ -71,104 +61,56 @@ UNVERIFIED — SPECIFIC DATA NOT AVAILABLE
 
 Do NOT fabricate. Do NOT claim filing was read if it was not.
 
-## STEP 3C — Verify Facts Against SEC
+## STEP 3B — Label Verification Results
 
-For each opportunity, compare news facts against SEC filings:
-
-### Verification Status
+For each ticker:
 
 | Status | Meaning |
 | --- | --- |
-| VERIFIED | SEC filing confirms the fact |
-| CONFLICT | SEC filing contradicts the fact |
-| UNVERIFIED | SEC filing does not address this fact |
-| NOT APPLICABLE | Fact cannot be verified by SEC |
+| **VERIFIED** | SEC filing confirms the data |
+| **UNVERIFIED — SEC DATA NOT AVAILABLE** | SEC data cannot be retrieved |
 
-### Conflict Resolution
-
-```text
-SEC IS AUTHORITATIVE
-```
-
-If conflict exists between news source and SEC:
-- Use SEC data
-- Label as: `DATA MISMATCH — SEC OVERRIDE`
-
-## STEP 3D — Generate Verification Report
-
-For each opportunity:
-
-1. List verified facts
-2. List unverified facts
-3. List conflicts (if any)
-4. Provide overall confidence based on verification
-
-### Confidence Assessment
-
-| Verification Rate | Confidence |
-| --- | --- |
-| >75% verified | HIGH |
-| 50-75% verified | MEDIUM |
-| <50% verified | LOW |
-
----
-
-## FASA 3 — OUTPUT FORMAT (LOCKED — SEC VERIFICATION)
+## FASA 3 — OUTPUT FORMAT (LOCKED)
 
 WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
-### Agora Dashboard — SEC Verification Report
+### PHASE 3 — SEC EDGAR VERIFICATION
+
+#### 1. Fetch Attempt
 
 ```markdown
-# SEC EDGAR VERIFICATION — [DATE]
+| Ticker | Company | SEC Access | Fetch Status |
+|--------|---------|------------|--------------|
+| XXX | [Name] | SUCCESS / BLOCKED | VERIFIED / UNVERIFIED |
+```
 
----
+#### 2. Verification Results
 
-## CARD [#1] — [TICKER]
+```markdown
+## [TICKER] — [COMPANY]
 
 | Field | Value |
 |-------|-------|
 | **FETCH STATUS** | **SUCCESS** / BLOCKED / UNVERIFIED |
-| Company | [COMPANY NAME] |
-| SEC Access | SUCCESS / BLOCKED |
+| SEC Status | **VERIFIED** / UNVERIFIED — SEC DATA NOT AVAILABLE |
 | Last Filing Checked | [Filing type] on [Date] |
 
-### Fact Verification
+### Verified Data
 
-| Fact | SEC Status |
-|------|------------|
-| [Fact from news] | Verified / Conflict / Unverified / N/A |
-| [Fact from news] | Verified / Conflict / Unverified / N/A |
+| Item | SEC Value | Filing |
+|------|-----------|--------|
+| [Item 1] | [Value] | [Filing type, Date] |
 
-### Conflicts (if any)
-[Detail any DATA MISMATCH — SEC OVERRIDE]
+### Unverified Data (if any)
 
-### Overall Confidence
-**HIGH** / MEDIUM / LOW
-
-### SEC Data Used
-- [Item]: [Value] ([Filing type], [Date])
+| Item | Status |
+|------|--------|
+| [Item] | UNVERIFIED — SEC DATA NOT AVAILABLE |
 
 ---
 ```
 
-## STEP 3E — Continue to Fasa 4 or End
-
-After Fasa 3 report:
-
-If Fasa 3 SEC verification still fails:
-→ Label: `UNVERIFIED — SEC DATA NOT AVAILABLE`
-→ Proceed to Fasa 4 automatically
-
-If user requests Fasa 4:
-```text
-PROCEED TO FASA 4 — RINGKASAN BIAS
-```
-
-If user does not request:
-```text
-END SESSION
-```
+---
 
 ## STOP 3
 
@@ -178,5 +120,5 @@ WAIT FOR USER
 ```
 
 User options at STOP 3:
-- Proceed to Fasa 4 (Ringkesan Bias) — only if Fasa 3 succeeded
+- Request Fasa 4 (Ringkesan Bias)
 - Skip → END

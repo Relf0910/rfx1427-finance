@@ -1,22 +1,22 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner dan analysis framework versi 3.0 yang membaca SATU news source pilihan user, menapis public companies mengikut trader profile, market focus, time horizon, materiality dan confidence, dan menjalankan Deep Analysis dengan verification SEC EDGAR hanya selepas opt-in eksplisit. Gunakan hanya apabila user meminta imbasan berita kewangan, penapisan opportunities, rujukan eksplisit kepada nama skill ini, atau aliran Intake / Fasa 1 / Fasa 2 / Fasa 3 / Fasa 4 framework ini. Jangan gunakan untuk nasihat beli atau jual, pelaksanaan dagangan, monitoring berterusan, watchlist, price alert, portfolio management, soalan finance umum tanpa ticker dan skop news scanning, atau analisis saham individu di luar konteks sumber berita. Output adalah read-only analysis, bukan trading advisor.
+description: AI financial news scanner dan analysis framework versi 3.1 yang membaca SATU news source pilihan user, menapis public companies mengikut trader profile, market focus, time horizon, materiality dan confidence, dan menjalankan Deep Analysis dengan Primary Tool. SEC EDGAR Verification只有在用户明确要求时才进行。使用此框架仅当用户请求金融新闻扫描、机会筛选、明确引用此技能名称，或需要Intake / Fasa 1 / Fasa 2 / Fasa 3 / Fasa 4流程时。不要用于买卖建议、交易执行、持续监控、观察列表、价格警报、投资组合管理，或在没有 ticker 和新闻扫描范围的情况下进行的一般财务问题。输出是只读分析，不是交易顾问。
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Plain Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 3.0 — Master Framework (4 Fasa)
+## Version 3.1 — Master Framework (4 Fasa)
 
 ## Core Principle
 
 ```text
 SCAN (Fasa 1)
    ↓
-FETCH + VERIFY (Fasa 2)
+ANALYZE (Fasa 2) — Primary Tool Only, NO SEC
    ↓
-SEC CATCH-UP (Fasa 3)
+SEC VERIFY (Fasa 3) — Opt-in Only
    ↓
 SUMMARISE (Fasa 4)
    ↓
@@ -27,7 +27,7 @@ END
 
 - **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
 - **NO FABRICATION** — never fabricate news, ticker, price, volume, financial figures, filing, rating, level, or source access. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED` when needed
-- **OPT-IN ONLY** — Fasa 2 and Fasa 3 only after explicit user selection. Fasa 4 only on user request
+- **OPT-IN ONLY** — Fasa 2 on user selection. Fasa 3 SEC Verification only on explicit user opt-in. Fasa 4 only on user request
 - **NO AUTOMATIC PHASE TRANSITION** — phase cannot jump without permission
 - **NO LOOP, NO MONITOR, NO AUTO-PROCEED** — each session is fresh
 - **ONE QUESTION AT A TIME** for Intake
@@ -51,13 +51,13 @@ FASA 1 — SCANNER (Finviz Default)
 STOP — WAIT FOR USER
     │
     ▼
-FASA 2 — DEEP ANALYSIS (Google Finance Default + SEC EDGAR)
+FASA 2 — DEEP ANALYSIS (Primary Tool Only, NO SEC)
     │
     ▼
 STOP — WAIT FOR USER
     │
     ▼
-FASA 3 — SEC EDGAR VERIFICATION (Jika Fasa 2 Gagal)
+FASA 3 — SEC EDGAR VERIFICATION (Opt-in Only)
     │
     ▼
 STOP — WAIT FOR USER
@@ -82,7 +82,7 @@ END
 5. SEC blocked/unavailable → label: `UNVERIFIED — SEC DATA NOT AVAILABLE`
 6. **Jangan claim verification tanpa fetch**
 7. **Jangan invent missing data**
-8. Jika Primary + SEC **kedua-duanya gagal** → `FETCH FAILED — ANALYSIS SKIPPED`
+8. Jika Primary Tool gagal → `FETCH FAILED — ANALYSIS SKIPPED`
 
 ---
 
@@ -99,26 +99,26 @@ END
 7. Maximum 7 Fasa 1 opportunities.
 8. Fasa 2 requires explicit opt-in.
 9. User chooses Primary Tool (Google Finance default).
-10. SEC EDGAR is mandatory verification partner.
-11. Stage 1 → Stage 2 → Stage 3 (Fasa 2).
-12. Fetch before analysis.
-13. No fabricated data.
-14. No training data replacing required current fetch.
-15. SEC override only for SEC-authoritative items.
-16. Missing SEC data = Unverified.
-17. Missing data = Not Available.
-18. Rejected mechanism = Skip.
-19. Low final confidence = Skip.
-20. Fasa 3 only if SEC failed in Fasa 2.
-21. Fasa 4 only when user asks.
-22. No automatic phase transition.
-23. No loop.
-24. No watchlist.
-25. No monitoring.
-26. No buy/sell instruction.
-27. No guaranteed prediction.
-28. Every session starts fresh.
-29. Format Fasa 1, 2, 3, 4 are LOCKED. Jangan ubah.
+10. Fasa 2 uses Primary Tool ONLY. No SEC in Fasa 2.
+11. Fasa 3 is SEPARATE phase for SEC EDGAR (opt-in only).
+12. SEC EDGAR is NOT mandatory in Fasa 2.
+13. Fetch before analysis.
+14. No fabricated data.
+15. No training data replacing required current fetch.
+16. Missing data = Not Available.
+17. Rejected mechanism = Skip.
+18. Low final confidence = Skip.
+19. Fasa 3 only if user explicitly opt-in for SEC verification.
+20. Fasa 4 only when user asks.
+21. No automatic phase transition.
+22. No loop.
+23. No watchlist.
+24. No monitoring.
+25. No buy/sell instruction.
+26. No guaranteed prediction.
+27. Every session starts fresh.
+28. Format Fasa 1, 2, 3, 4 are LOCKED. Jangan ubah.
+29. SEC Verification labels: VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE
 
 ---
 
@@ -216,40 +216,170 @@ WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 ---
 
-## Fasa 2 — Deep Analysis (Google Finance Default + SEC EDGAR)
+## Fasa 2 — Deep Analysis (Primary Tool Only, NO SEC)
+
+### Overview
+
+Fasa 2 uses **Primary Tool ONLY**. No SEC EDGAR in this phase.
 
 ### Step 2A — Primary Tool Selection
 
 Ask: "Apa primary tool untuk deep analysis?"
-- [Google Finance (Default)] [MarketBeat] [Skip]
+- [Google Finance (Default)] [Finviz] [MarketBeat] [Skip]
 
-### Step 2B — 3-Stage Verification
+→ If user does not choose, USE GOOGLE FINANCE AS DEFAULT.
 
-1. Fetch Primary Data
-2. Fetch SEC EDGAR Data
-3. Comparison Matrix
+### Step 2B — Fetch Primary Data
 
-### Comparison Matrix (Stage 3)
+Fetch data from selected Primary Tool for every Fasa 1 opportunity:
 
-| Situation | Status | Action |
-|---|---|---|
-| Primary = SEC | MATCH — CONFIRMED | Use data |
-| Primary ≠ SEC, SEC authoritative | DATA MISMATCH — SEC OVERRIDE | Use SEC |
-| SEC unavailable | UNVERIFIED | Use Primary + label |
-| Primary unavailable, SEC available | SEC ONLY | Use SEC |
-| Both unavailable | DATA NOT AVAILABLE | Do not use |
+#### GOOGLE FINANCE
+- Current price, Price change %, Recent news, Analyst targets, Analyst ratings, Earnings data
+
+#### FINVIZ
+- Current price, Price change %, Volume, RSI, SMA 20, SMA 50, P/E, EPS, Revenue, News headlines
+
+#### MARKETBEAT
+- Current price, Price change %, Short interest, Analyst consensus, Financial ratios
+
+### Step 2C — Analyze & Synthesize
+
+For each opportunity:
+1. Verify catalyst from Fasa 1
+2. Assess timing fit with trader profile
+3. Identify relevant price levels
+4. Apply confidence gate
+
+### Data Rules
+
+If field not available:
+```text
+NOT AVAILABLE
+```
+
+If primary tool fails:
+```text
+PRIMARY TOOL — BLOCKED
+```
+
+### Fasa 2 Output — LOCKED
+
+Output format: PHASE 2 — DEEP ANALYSIS
+
+Components:
+1. Primary Data Summary
+2. Catalyst Verification
+3. Deep Analysis Reports (per ticker)
+4. Ranking Summary
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+### STOP 2
+
+After Fasa 2 report:
+```text
+STOP
+WAIT FOR USER
+```
+
+User options:
+- Opt-in to Fasa 3 (SEC EDGAR Verification)
+- Request Fasa 4 (Ringkesan Bias)
+- Skip → END
 
 ---
 
-## Fasa 3 — SEC EDGAR Verification (Jika Fasa 2 Gagal)
+## Fasa 3 — SEC EDGAR Verification (Opt-in Only)
 
-Triggered ONLY if SEC EDGAR in Fasa 2 shows `BLOCKED` or `UNVERIFIED`.
+### Overview
+
+Fasa 3 is **OPT-IN ONLY**. Only runs if user explicitly asks for SEC EDGAR verification.
+
+### When Fasa 3 is Triggered
+
+User asks:
+- "Jalankan SEC EDGAR Verification?"
+- "Verify dengan SEC"
+- "SEC verification"
+
+### Step 3A — Fetch SEC EDGAR Data
+
+For each ticker, access SEC EDGAR (sec.gov/edgar):
+
+| Item | Filing |
+| --- | --- |
+| Revenue | 10-Q / 10-K |
+| Net Income / EPS | 10-Q / 10-K |
+| Total Debt | 10-Q / 10-K |
+| Cash Flow | 10-Q / 10-K |
+| Insider Transactions | Form 4 |
+| Outstanding Shares | 10-Q / 10-K |
+| Material Events | 8-K |
+
+### Step 3B — Label Results
+
+- If data exists and verified → `VERIFIED`
+- If data not available → `UNVERIFIED — SEC DATA NOT AVAILABLE`
+
+### Fasa 3 Output — LOCKED
+
+Output format: PHASE 3 — SEC EDGAR VERIFICATION
+
+Components:
+1. Fetch Attempt
+2. Verification Results (per ticker)
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
+
+### STOP 3
+
+```text
+STOP
+WAIT FOR USER
+```
+
+User options:
+- Request Fasa 4 (Ringkesan Bias)
+- Skip → END
 
 ---
 
 ## Fasa 4 — Ringkesan Bias (LOCKED — Agora Style)
 
-Output format LOCKED to Agora Dashboard Style (Tables + Cards).
+### Overview
+
+Fasa 4 provides weekly bias summary with locked format.
+
+**Fasa 4 is: USER REQUEST ONLY**
+
+Trigger: "Ringkasan" / "Summary" / "Phase 4" / "Fasa 4"
+
+### FASA 4 — PERATURAN (WAJIB)
+
+**FORMAT INI LOCKED. AI WAJIB IKUT TEPAT. JANGAN UBAH APA-APA.**
+
+1. **Hanya 3 arah:** Positif / Negatif / Neutral (TIDAK ada MIXED)
+2. **Anggaran dalam range** (contoh: +3% to +8%)
+3. **Sebab ringkas maksimum 10 patah perkataan**
+4. **Setiap saham WAJIB ada tag:**
+   - `PREPARE FOR VOLUME BUY` (Positif)
+   - `BE CAREFUL — MARKET CRASH RISK` (Negatif)
+   - `WAIT FOR CONFIRMATION` (Neutral)
+5. **WAJIB ada END OF SESSION table**
+6. **WAJIB ada NO MONITORING disclaimer**
+7. **JANGAN tambah apa-apa di luar format ini**
+
+### Fasa 4 Output — LOCKED
+
+Output format: PHASE 4 — RINGKASAN BIAS
+
+Components:
+1. Summary Table (Saham/Arah/Anggaran/Sebab)
+2. Detailed explanation per ticker with tags
+3. END OF SESSION table
+4. NO MONITORING disclaimer
+
+WAJIB ikut format ini TEPAT. Jangan tambah apa-apa di luar format.
 
 ---
 
@@ -274,16 +404,16 @@ ESTIMATE
 | Source fails to access | `BLOCKED — SOURCE COULD NOT BE ACCESSED` |
 | Primary tool fails | `PRIMARY TOOL — BLOCKED` |
 | Data missing | `NOT AVAILABLE` |
+| SEC data verified | `VERIFIED` |
 | SEC data missing | `UNVERIFIED — SEC DATA NOT AVAILABLE` |
-| Data conflict (SEC authoritative) | `DATA MISMATCH — SEC OVERRIDE` |
 | Mechanism fails | `REJECTED` |
 | Confidence Low | `LOW CONFIDENCE — SKIP` |
 | No opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
-| Both Primary + SEC fail | `FETCH FAILED — ANALYSIS SKIPPED` |
+| Primary Tool fails | `FETCH FAILED — ANALYSIS SKIPPED` |
 
 ## Opportunity Lifecycle
 
-`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → FASA 1 REPORT → USER OPT-IN → PRIMARY DATA → SEC DATA → COMPARISON → MECHANISM → TIMING → PRICE LEVELS → FINAL CONFIDENCE → FASA 2 REPORT`
+`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → FASA 1 REPORT → USER OPT-IN → PRIMARY DATA FETCH → FASA 2 REPORT → USER OPT-IN → SEC EDGAR FETCH → FASA 3 REPORT → USER REQUEST → FASA 4 REPORT → END`
 
 Any hard gate fails → `STOP / SKIP`
 
@@ -304,10 +434,10 @@ Any hard gate fails → `STOP / SKIP`
 
 ## Status & Controls
 
-- **VERSION 3.0** — Master Framework with 4 Fasa
-- **Authority Gate** — SEC EDGAR is mandatory verification partner; Primary Tool selected by user (Google Finance / MarketBeat / Skip). Primary Tool not selected by AI for user
+- **VERSION 3.1** — Fasa 2 Primary Tool Only, Fasa 3 SEC Opt-in Only
+- **Authority Gate** — Primary Tool selected by user (Google Finance / Finviz / MarketBeat / Skip). Primary Tool not selected by AI for user. SEC EDGAR is separate opt-in phase
 - **Evidence Integrity Gate** — every important claim must be supported by real data (source URL, filing reference, or label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`). No fabrication allowed
-- **Completion Gate** — phase only complete after every step in reference is done and status recorded (PRIMARY DATA FETCHED, SEC DATA FETCHED, MATCH / MISMATCH, etc)
+- **Completion Gate** — phase only complete after every step in reference is done
 
 ## Intent-to-Command Engine
 
@@ -328,7 +458,7 @@ INSPECT → PLAN → BUILD → VALIDATE → DIAGNOSE → REPAIR → REVALIDATE
 - INSPECT — verify current state (Intake complete? Which Phase?)
 - PLAN — select next phase & step
 - BUILD — execute step (access source, extract, verify)
-- VALIDATE — check hard gate (Materiality, Confidence, Horizon Fit, Noise Gate, Comparison Matrix)
+- VALIDATE — check hard gate (Materiality, Confidence, Horizon Fit, Noise Gate)
 - DIAGNOSE — identify cause if gate fails
 - REPAIR — select corrective action (label NOT AVAILABLE, SKIP, etc)
 - REVALIDATE — repeat validation after repair
