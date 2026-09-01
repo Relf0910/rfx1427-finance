@@ -241,7 +241,7 @@ ESTIMATE
 
 ```
 rfx1427-finance/
-├── SKILL.md                        # Main skill definition (v4.3)
+├── SKILL.md                        # Main skill definition (v4.4)
 ├── README.md                       # This file
 ├── agents/
 │   └── openai.yaml                  # Agent configuration

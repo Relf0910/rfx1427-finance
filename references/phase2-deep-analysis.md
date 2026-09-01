@@ -1,10 +1,10 @@
-# Phase 2 — Deep Analysis (Primary Tool Only, NO SEC)
+# Phase 2 — Deep Analysis (Python + AI Unified, Primary Tool Only, NO SEC)
 
-Source: Framework v3.1
+Source: Framework v4.4
 
 ## Overview
 
-Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool ONLY**.
+Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool ONLY**. Python works directly with the AI: Python fetches market data from the selected Primary Tool and prepares it; the AI analyzes and judges. No collect-then-read two-pass.
 
 **IMPORTANT: No SEC EDGAR in Phase 2. SEC is handled in Phase 3 separately.**
 
@@ -18,6 +18,14 @@ Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool
 2. **Do NOT invent data** — use NOT AVAILABLE, UNVERIFIED, BLOCKED
 3. **Do NOT give buy/sell signals** — use labels: POSITIVE / NEUTRAL / NEGATIVE
 4. **NO SEC in Phase 2** — SEC is handled in Phase 3 (separate opt-in phase)
+5. **Python fetches + prepares; AI judges** — Python does NOT analyze
+
+## Python + AI Division of Work (Phase 2)
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Fetch market data from the selected Primary Tool, format it per ticker, assist fallback. Python does NOT analyze or judge. |
+| **AI** | Reads the fetched data, verifies the catalyst, assesses timing fit vs trader profile, identifies price levels, applies the confidence gate, outputs the analysis. |
 
 ## STEP 2A — Primary Tool Selection
 
@@ -50,9 +58,17 @@ END SESSION
 - Do NOT offer Phase 2 again after Skip
 - **No SEC EDGAR in Phase 2** — SEC verification is Phase 3 (separate opt-in)
 
-## STEP 2B — Fetch Primary Data
+## STEP 2B — Python-Assisted Fetch (Primary Data)
 
-Fetch data from selected Primary Tool for **EVERY PHASE 1 OPPORTUNITY**.
+Python fetches data from the selected Primary Tool for **EVERY PHASE 1 OPPORTUNITY** and streams it to the AI. Python prepares; AI judges.
+
+### Python access method (by tool)
+
+```text
+Google Finance / Yahoo -> yfinance
+Finviz                 -> finvizfinance
+MarketBeat / other     -> requests + BeautifulSoup4
+```
 
 ### GOOGLE FINANCE
 
@@ -105,9 +121,9 @@ Internal state: `PRIMARY DATA FETCHED — [TOOL]`
 
 ---
 
-## STEP 2C — Analyze & Synthesize
+## STEP 2C — Analyze & Synthesize (AI judges, ONE PASS)
 
-Only after all Primary Data is fetched.
+Python delivers the fetched data; the AI performs the analysis. AI does NOT depend on a separate collect-then-read step.
 
 AI analysis tasks:
 1. Verify catalyst from Phase 1

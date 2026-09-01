@@ -1,13 +1,13 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.3 where Python works directly with the AI in a single Phase 1 flow — Python brings the AI to the selected news source and assists reading in real time, the AI identifies the best positive opportunities per trader profile (max 7 list), and filters noise in one pass. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.4 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 4.3 — Master Framework (4 Phase + Python–AI Unified Phase 1 + Positive-Only Scan + Locked Output Templates)
+## Version 4.4 — Master Framework (4 Phase + Python–AI Unified Phase 1/2/3 + Positive-Only Scan + Locked Output Templates)
 
 ## Core Principle
 
@@ -140,6 +140,8 @@ END
 34. Finviz is the default and primary news source. All sources in the Source Library Map are free and verified. The user may select any source or provide a custom one. The AI must accept any source the user provides without rejection.
 35. Phase 1 is POSITIVE-ONLY. Negative, mixed, and neutral items are discarded. Only positive opportunities are reported.
 36. Phase 1 outputs the best 7 positive opportunities (0-7). It does NOT force-fill to reach 7.
+37. Python works directly with the AI inside Phase 2 (unified flow). Python fetches market data from the selected Primary Tool and prepares it; the AI analyzes, verifies the catalyst, assesses timing fit, identifies price levels, and applies the confidence gate. Python does NOT analyze or judge; the AI judges. Primary Tool remains the benchmark (NO SEC in Phase 2).
+38. Python works directly with the AI inside Phase 3 (unified flow, opt-in only). Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and assigns VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE. Python does NOT verify or label; the AI judges.
 
 ---
 
@@ -655,13 +657,79 @@ WAIT FOR USER
 
 ---
 
-## Phase 2 — Deep Analysis (Primary Tool Only, NO SEC)
+## Phase 2 — Deep Analysis (Python + AI Unified, Primary Tool Only, NO SEC)
+
+### Phase 2 Concept
+
+Same principle as Phase 1: **Python works directly with the AI inside Phase 2**. Python fetches market data from the selected Primary Tool and prepares it for the AI; the AI interprets and judges. No collect-then-read two-pass.
+
+- Python fetches/streams market data (price, EPS, revenue, fundamentals, levels) for every Phase 1 opportunity.
+- The AI reads each data point, verifies the catalyst, assesses timing fit, identifies price levels, and applies the confidence gate — in one pass.
+- Python assists by fetching and formatting; **the AI judges**.
+
+### Python + AI Division of Work (Phase 2)
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Fetch market data from the selected Primary Tool, format it per ticker, assist search/access fallback. Python does NOT analyze or judge. |
+| **AI** | Reads the fetched data, verifies the catalyst, assesses timing fit vs trader profile, identifies price levels, applies the confidence gate, outputs the analysis. |
+
+### Python + AI Streaming Flow (Phase 2, ONE PASS)
+
+```text
+[User selects Primary Tool (Google Finance default / Finviz / MarketBeat)]
+    │
+    ▼
+[Python fetches market data for Phase 1 ticker 1..N]
+    │
+    ▼
+[AI reads each ticker data with trader-profile lens]
+    │
+    ▼
+[AI verifies catalyst + timing fit + price levels]
+    │
+    ▼
+[AI applies confidence gate -> LOW = SKIP]
+    │
+    ▼
+[AI builds Ranking Summary]
+    │
+    ▼
+STOP — WAIT FOR USER
+```
+
+### Python Steps for Phase 2 (Assisted by AI)
+
+```text
+STEP D1 — TOOL SELECTION (AI asks user; Python executes)
+  - Primary Tool: Google Finance (default) / Finviz / MarketBeat.
+  - If Skip -> END SESSION.
+  - Python uses the matching access method:
+      Google Finance / Yahoo -> yfinance
+      Finviz -> finvizfinance
+      MarketBeat / other -> requests + BeautifulSoup4
+
+STEP D2 — FETCH MARKET DATA (Python fetches per ticker)
+  - For EVERY Phase 1 opportunity, Python fetches:
+    price, % change, market cap, EPS, revenue, P/E, volume,
+    recent highs/lows, and any other field available from the tool.
+  - If a field is missing -> NOT AVAILABLE.
+  - If the tool is blocked -> PRIMARY TOOL — BLOCKED.
+  - Python prepares the data; it does NOT judge.
+
+STEP D3 — ANALYZE (AI judges, ONE PASS)
+  - AI reads each ticker's fetched data.
+  - AI verifies the Phase 1 catalyst against the market data.
+  - AI assesses timing fit matched to the trader profile.
+  - AI identifies relevant price levels (or NOT AVAILABLE).
+  - AI applies the confidence gate -> LOW = LOW CONFIDENCE — SKIP.
+```
 
 ### Phase 2 Steps
 
 **Step 2A — Primary Tool Selection:** Ask user. Default = Google Finance. If Skip → END SESSION.
-**Step 2B — Fetch Primary Data:** Fetch from selected tool for EVERY Phase 1 opportunity. If blocked → `PRIMARY TOOL — BLOCKED`. If field missing → `NOT AVAILABLE`.
-**Step 2C — Analyze & Synthesize:** Verify catalyst, assess timing fit, identify price levels, apply confidence gate. If Low confidence → `LOW CONFIDENCE — SKIP`.
+**Step 2B — Python-Assisted Fetch:** Python fetches market data from the selected tool for EVERY Phase 1 opportunity and streams it to the AI. If blocked → `PRIMARY TOOL — BLOCKED`. If field missing → `NOT AVAILABLE`.
+**Step 2C — Analyze & Synthesize (AI judges):** Python delivers the data; AI verifies catalyst, assesses timing fit (matched to profile), identifies price levels, applies confidence gate. If Low confidence → `LOW CONFIDENCE — SKIP`.
 
 ### Phase 2 Output — LOCKED TEMPLATE
 
@@ -742,13 +810,70 @@ WAIT FOR USER
 
 ---
 
-## Phase 3 — SEC EDGAR Verification (Opt-in Only)
+## Phase 3 — SEC EDGAR Verification (Python + AI Unified, Opt-in Only)
+
+### Phase 3 Concept
+
+Same principle as Phase 1 and Phase 2: **Python works directly with the AI inside Phase 3**. Python fetches and parses SEC EDGAR filings and prepares them for the AI; the AI verifies and labels. No collect-then-read two-pass.
+
+- Python accesses SEC EDGAR (official API / library) for every ticker, fetches and parses official filings (10-K, 10-Q, 8-K, 6-K).
+- The AI reads each filing, compares it against the Phase 2 claims, and assigns the label VERIFIED or UNVERIFIED — in one pass.
+- Python assists by fetching and parsing; **the AI judges**.
+
+### Python + AI Division of Work (Phase 3)
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Access SEC EDGAR, fetch + parse official filings per ticker, prepare key items. Python does NOT verify or label. |
+| **AI** | Reads each filing, compares against Phase 2 claims, assigns VERIFIED / UNVERIFIED label, links back to the catalyst. |
+
+### Python + AI Streaming Flow (Phase 3, ONE PASS)
+
+```text
+[User explicitly opts in to SEC EDGAR verification]
+    │
+    ▼
+[Python fetches + parses SEC EDGAR filing for ticker 1..N]
+    │
+    ▼
+[AI reads each official filing]
+    │
+    ▼
+[AI compares against Phase 2 claims]
+    │
+    ▼
+[AI labels VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE]
+    │
+    ▼
+STOP — WAIT FOR USER
+```
+
+### Python Steps for Phase 3 (Assisted by AI)
+
+```text
+STEP S1 — SEC ACCESS (Python fetches; AI decides what to check)
+  - Python accesses SEC EDGAR via its official API/library.
+  - For each ticker, Python fetches official filings:
+    10-K, 10-Q, 8-K, 6-K, Form 4 (insider transactions).
+
+STEP S2 — PARSE KEY ITEMS (Python prepares)
+  - Python extracts from each filing:
+    Revenue, Net Income / EPS, Total Debt, Cash Flow,
+    Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
+  - If an item cannot be retrieved -> NOT AVAILABLE.
+
+STEP S3 — VERIFY (AI judges, ONE PASS)
+  - AI reads each parsed filing.
+  - AI compares the filing against the Phase 2 claims.
+  - AI assigns: VERIFIED if the SEC filing confirms the data;
+    UNVERIFIED — SEC DATA NOT AVAILABLE if the data cannot be retrieved.
+```
 
 ### Phase 3 Steps
 
 **Trigger:** User explicitly asks for SEC EDGAR verification.
-**Step 3A — Fetch SEC EDGAR Data:** For each ticker, access SEC EDGAR. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
-**Step 3B — Label Results:** VERIFIED if SEC filing confirms data. UNVERIFIED — SEC DATA NOT AVAILABLE if data cannot be retrieved.
+**Step 3A — Python-Assisted SEC Fetch:** Python accesses SEC EDGAR for each ticker and fetches + parses official filings. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
+**Step 3B — Label Results (AI judges):** Python delivers the parsed filings; AI compares against Phase 2 and assigns VERIFIED if the SEC filing confirms data. UNVERIFIED — SEC DATA NOT AVAILABLE if data cannot be retrieved.
 
 ### Phase 3 Output — LOCKED TEMPLATE
 
