@@ -1,6 +1,6 @@
 # Phase 2 — Deep Analysis (Python + AI Unified, Primary Tool Only, NO SEC)
 
-Source: Framework v4.4
+Source: Framework v4.5
 
 ## Overview
 
@@ -118,6 +118,27 @@ PRIMARY TOOL — BLOCKED
 Do NOT claim data was fetched.
 
 Internal state: `PRIMARY DATA FETCHED — [TOOL]`
+
+### Python Failure — Layered Fallback (Phase 2)
+
+If Python fetch fails, use the layered fallback. Python ALWAYS tries the Primary Tool first; the label is ONLY declared when both methods fail.
+
+```text
+LAYER 1 — PYTHON FETCH (Primary)      -> if success, send to AI (Step 2C)
+LAYER 2 — ALTERNATE METHOD (Fallback) -> if Python fails, try an alternate
+                                         market-data method (Alpha Vantage /
+                                         Finnhub / another free source, or
+                                         retry once). If success, send to AI.
+LAYER 3 — LABEL (Final)               -> if both fail, AI applies:
+                                           per ticker   -> PRIMARY TOOL — BLOCKED
+                                           all tickers  -> FETCH FAILED — ANALYSIS SKIPPED
+```
+
+Rules:
+- Python ALWAYS tries the Primary Tool first (Layer 1).
+- Layer 2 (alternate method) is ONLY used when Python fails.
+- The label is ONLY declared when both layers fail (Layer 3).
+- Python does NOT judge; the AI applies the label.
 
 ---
 

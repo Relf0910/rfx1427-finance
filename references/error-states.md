@@ -1,6 +1,6 @@
 # Error States
 
-Source: Framework v3.1
+Source: Framework v4.5
 
 ## SOURCE ERROR
 
@@ -49,6 +49,22 @@ VERIFIED
 ```
 
 Used when: SEC filing confirms the data.
+
+## PYTHON FETCH NEEDS FALLBACK
+
+```text
+FALLBACK_NEEDED
+```
+
+Used when: Python fetch fails (Layer 1) in Phase 2 or Phase 3. Python retries with an alternate method (Layer 2). Only if the alternate method also fails do we declare a Layer 3 label.
+
+## FETCH FAILED (ALL PRIMARY TOOL FAILURES)
+
+```text
+FETCH FAILED — ANALYSIS SKIPPED
+```
+
+Used when: All primary-tool fetches fail in Phase 2 after fallback. Analysis is skipped for those tickers.
 
 ## MECHANISM FAILED
 

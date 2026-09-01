@@ -4,7 +4,7 @@
 
 ### AI Financial News Scanner & Analysis Framework
 
-[![Version](https://img.shields.io/badge/version-4.4-blue.svg)](https://github.com/Relf0910/rfx1427-finance)
+[![Version](https://img.shields.io/badge/version-4.5-blue.svg)](https://github.com/Relf0910/rfx1427-finance)
 [![Status](https://img.shields.io/badge/status-active-green.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)]()
 [![Phase](https://img.shields.io/badge/phases-4-orange.svg)]()
@@ -14,7 +14,7 @@
 
 ---
 
-> **RFX1427 Finance** is an AI financial news scanner and analysis framework with strict gate controls, a fact-based approach, and official SEC EDGAR verification. Python works directly with the AI across Phase 1, 2 and 3 — Python brings the AI to the news source, the market-data tool, and the SEC EDGAR filings, while the AI judges. Phase 1 reads ONE user-selected source and reports the best positive opportunities per trader profile; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit user opt-in.
+> **RFX1427 Finance** is an AI financial news scanner and analysis framework with strict gate controls, a fact-based approach, and official SEC EDGAR verification. Python works directly with the AI across Phase 1, 2 and 3 — Python brings the AI to the news source, the market-data tool, and the SEC EDGAR filings, while the AI judges. Every phase has a **layered fallback on Python failure** (Python fetch → alternate method → official failure label). Phase 1 reads ONE user-selected source and reports the best positive opportunities per trader profile; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit user opt-in.
 
 ---
 
@@ -30,7 +30,7 @@
 - [Error States](#error-states)
 - [References](#references)
 - [Folder Structure](#folder-structure)
-- [Hard Rules](#hard-rules-38)
+- [Hard Rules](#hard-rules-39)
 - [Status & Controls](#status--controls)
 - [Change Log](#change-log)
 
@@ -51,6 +51,7 @@ RFX1427 Finance is a **read-only analysis framework** — not a trading advisor.
 | Positive-only selection, max 7 opportunities | ✅ |
 | Materiality & confidence scoring | ✅ |
 | 3-layer hybrid fallback (Python fetch → web_search → BLOCKED) | ✅ |
+| Layered fallback on Python failure (Phase 2 & 3) | ✅ |
 | Deep Analysis with user-selected Primary Tool | ✅ |
 | SEC EDGAR verification (opt-in only) | ✅ |
 | Weekly bias summary with locked format | ✅ |
@@ -164,7 +165,7 @@ Three questions, asked one at a time:
 | Step | Action |
 |---|---|
 | 2A | Ask user for Primary Tool (default: Google Finance) |
-| 2B | **Python fetches** market data for EVERY Phase 1 opportunity |
+| 2B | **Python fetches** market data for EVERY Phase 1 opportunity. On Python failure → alternate data method, then label |
 | 2C | **AI analyzes & synthesizes**: verify catalyst, timing fit, price levels, confidence gate |
 
 **Primary Tool Options:**
@@ -177,14 +178,18 @@ Three questions, asked one at a time:
 
 **Output:** Deep Analysis report (4 blocks) → `STOP / WAIT FOR USER`
 
+**Python Failure Fallback:** Layer 1 Python fetch → Layer 2 alternate data method (Alpha Vantage / Finnhub / another free source) → Layer 3 label (`PRIMARY TOOL — BLOCKED` per ticker / `FETCH FAILED — ANALYSIS SKIPPED` all tickers).
+
 ### ✅ Phase 3 — SEC EDGAR Verification (Python + AI Unified)
 
 | Step | Action |
 |---|---|
-| 3A | **Python accesses SEC EDGAR**, fetches + parses official filings (10-K, 10-Q, 8-K, 6-K, Form 4) |
+| 3A | **Python accesses SEC EDGAR**, fetches + parses official filings (10-K, 10-Q, 8-K, 6-K, Form 4). On Python failure → alternate SEC method, then label |
 | 3B | **AI verifies** against Phase 2 claims and assigns VERIFIED / UNVERIFIED |
 
 **Labels:** `VERIFIED` if SEC filing confirms data · `UNVERIFIED — SEC DATA NOT AVAILABLE` if data cannot be retrieved
+
+**Python Failure Fallback:** Layer 1 Python SEC fetch → Layer 2 alternate SEC method (sec-api / EDGAR full-text search API / another SEC library) → Layer 3 label (`BLOCKED — SEC EDGAR COULD NOT BE ACCESSED` then `UNVERIFIED — SEC DATA NOT AVAILABLE`). Fallback is **NOT** web_search — SEC verification must come from official SEC sources.
 
 **Output:** SEC EDGAR Verification report → `STOP / WAIT FOR USER`
 
@@ -277,6 +282,7 @@ ESTIMATE
 | Data missing | `NOT AVAILABLE` |
 | SEC data verified | `VERIFIED` |
 | SEC data missing | `UNVERIFIED — SEC DATA NOT AVAILABLE` |
+| SEC EDGAR access fails (Phase 3) | `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED` |
 | Mechanism fails | `REJECTED` |
 | Confidence Low | `LOW CONFIDENCE — SKIP` |
 | Python fetch fails (needs fallback) | `FALLBACK_NEEDED` |
@@ -308,7 +314,7 @@ ESTIMATE
 
 ```
 rfx1427-finance/
-├── SKILL.md                        # Main skill definition (v4.4)
+├── SKILL.md                        # Main skill definition (v4.5)
 ├── README.md                       # This file
 ├── agents/
 │   └── openai.yaml                  # Agent configuration
@@ -328,7 +334,7 @@ rfx1427-finance/
 
 ---
 
-## Hard Rules (38)
+## Hard Rules (39)
 
 Original ordering from SKILL.md § MASTER HARD RULES. Categories in brackets are indicative only.
 
@@ -372,6 +378,7 @@ Original ordering from SKILL.md § MASTER HARD RULES. Categories in brackets are
 | 36 | Phase 1 | Phase 1 outputs the best 7 positive opportunities (0-7). Does NOT force-fill |
 | 37 | Phase 2 | **Python works directly with the AI inside Phase 2 (unified flow)**. Python fetches market data; AI analyzes, verifies catalyst, assesses timing fit, identifies price levels, applies confidence gate. Python does NOT analyze or judge. Primary Tool remains benchmark (NO SEC in Phase 2) |
 | 38 | Phase 3 | **Python works directly with the AI inside Phase 3 (unified flow, opt-in only)**. Python fetches + parses SEC EDGAR filings; AI verifies against Phase 2 claims and assigns VERIFIED / UNVERIFIED. Python does NOT verify or label |
+| 39 | Global | **Python failure is handled by a layered fallback in EVERY phase**. Phase 2 → alternate market-data method; Phase 3 → alternate SEC method (NOT web_search). Python always tries the primary method first; the official label is only declared when both methods fail. Python does NOT judge; the AI applies the label |
 
 ---
 
@@ -379,7 +386,7 @@ Original ordering from SKILL.md § MASTER HARD RULES. Categories in brackets are
 
 | Control | Description |
 |---|---|
-| **Version** | 4.4 — Python + AI Unified across Phase 1, 2 & 3, positive-only scan, locked templates |
+| **Version** | 4.5 — Python + AI Unified across Phase 1, 2 & 3, positive-only scan, layered fallback on Python failure, locked templates |
 | **Authority Gate** | Primary Tool selected by user. SEC EDGAR is separate opt-in phase |
 | **Python/AI Boundary** | Python fetches + prepares; AI judges. No overlap |
 | **Evidence Integrity Gate** | Every important claim must be supported by real data (source URL, filing reference, or label) |
@@ -398,6 +405,7 @@ Original ordering from SKILL.md § MASTER HARD RULES. Categories in brackets are
 | **v4.2** | Source Library Map (Finviz default + 9 free alternatives + blocked list); 3-layer hybrid fallback; `FALLBACK_NEEDED` status; hard rules 33–34 |
 | **v4.3** | Pre-Phase 1 merged INTO Phase 1 as Python + AI Unified (one pass, positive-only); max opportunities reduced to 7; hard rules 35–36 |
 | **v4.4** | **Python + AI Unified extended to Phase 2 & Phase 3** (one pass): Python fetches market data + parses SEC EDGAR while AI judges; hard rules 37–38 |
+| **v4.5** | **Layered fallback on Python failure in Phase 2 & 3**: Python fetch → alternate method → official failure label. Phase 2 → alternate data method; Phase 3 → alternate SEC method (NOT web_search); new error label `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED`; hard rule 39 |
 
 ---
 

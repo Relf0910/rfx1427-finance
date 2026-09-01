@@ -1,13 +1,13 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.4 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.5 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Every phase has a layered fallback for Python failure (Python fetch → alternate method → official failure label). Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 4.4 — Master Framework (4 Phase + Python–AI Unified Phase 1/2/3 + Positive-Only Scan + Locked Output Templates)
+## Version 4.5 — Master Framework (4 Phase + Python–AI Unified Phase 1/2/3 + Positive-Only Scan + Layered Fallback on Python Failure + Locked Output Templates)
 
 ## Core Principle
 
@@ -101,7 +101,7 @@ END
 ---
 
 # ====================================================================
-# MASTER HARD RULES (29)
+# MASTER HARD RULES (39)
 # ====================================================================
 
 1. One question at a time.
@@ -142,6 +142,7 @@ END
 36. Phase 1 outputs the best 7 positive opportunities (0-7). It does NOT force-fill to reach 7.
 37. Python works directly with the AI inside Phase 2 (unified flow). Python fetches market data from the selected Primary Tool and prepares it; the AI analyzes, verifies the catalyst, assesses timing fit, identifies price levels, and applies the confidence gate. Python does NOT analyze or judge; the AI judges. Primary Tool remains the benchmark (NO SEC in Phase 2).
 38. Python works directly with the AI inside Phase 3 (unified flow, opt-in only). Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and assigns VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE. Python does NOT verify or label; the AI judges.
+39. Python failure is handled by a layered fallback in EVERY phase. In Phase 2, fallback is an alternate market-data method; in Phase 3, fallback is an alternate SEC access method (NOT web_search). Python ALWAYS tries the primary method first. The official failure label is ONLY declared when both methods fail. Python does NOT judge; the AI applies the label.
 
 ---
 
@@ -715,7 +716,29 @@ STEP D2 — FETCH MARKET DATA (Python fetches per ticker)
     recent highs/lows, and any other field available from the tool.
   - If a field is missing -> NOT AVAILABLE.
   - If the tool is blocked -> PRIMARY TOOL — BLOCKED.
+  - If Python fetch fails -> FALLBACK_NEEDED (see D2-Fallback below).
   - Python prepares the data; it does NOT judge.
+
+STEP D2-FALLBACK — LAYERED HANDLING OF PYTHON FAILURE
+  - LAYER 1 — PYTHON FETCH (Primary):
+      Python fetches market data from the selected Primary Tool.
+      If success -> send to AI (STEP D3).
+  - LAYER 2 — ALTERNATE METHOD (Fallback):
+      If Python fails (timeout / HTTP 403 / empty / parse error),
+      Python retries with an alternate market-data method that matches
+      the same data fields (e.g. Alpha Vantage / Finnhub / another free
+      data source), OR retries the original tool once.
+      If success -> send to AI (STEP D3).
+  - LAYER 3 — LABEL (Final):
+      If BOTH the primary fetch and the alternate method fail,
+      Python returns the official failure label. The AI applies it:
+        * Per ticker  -> PRIMARY TOOL — BLOCKED
+        * All tickers -> FETCH FAILED — ANALYSIS SKIPPED
+  - RULES:
+      * Python ALWAYS tries the primary tool first (Layer 1).
+      * Layer 2 is ONLY used when Python fails.
+      * The label is ONLY declared when both layers fail (Layer 3).
+      * Python does NOT judge; the AI decides the final label.
 
 STEP D3 — ANALYZE (AI judges, ONE PASS)
   - AI reads each ticker's fetched data.
@@ -725,10 +748,33 @@ STEP D3 — ANALYZE (AI judges, ONE PASS)
   - AI applies the confidence gate -> LOW = LOW CONFIDENCE — SKIP.
 ```
 
+### Python Failure — Fallback Architecture (Phase 2)
+
+```text
+[Step 2B: Python fetches market data (Layer 1)]
+    │
+    ├── SUCCESS ────────────────▶ [AI analyzes (Step 2C)]
+    │
+    └── FALLBACK_NEEDED (timeout/403/empty/parse error)
+          │
+          ▼
+    Alternate data method (Layer 2)
+    (Alpha Vantage / Finnhub / another free source, or retry once)
+          │
+          ├── SUCCESS ──────────▶ [AI analyzes (Step 2C)]
+          │
+          └── FAIL ─────────────▶ LABEL (Layer 3)
+                                    │
+                                    ├── per ticker   -> PRIMARY TOOL — BLOCKED
+                                    └── all tickers  -> FETCH FAILED — ANALYSIS SKIPPED
+```
+
+> **Rules:** Python ALWAYS tries the Primary Tool first. Layer 2 (alternate method) is ONLY used when Python fails. The failure label is ONLY declared when both layers fail. Python does NOT judge; the AI applies the label.
+
 ### Phase 2 Steps
 
 **Step 2A — Primary Tool Selection:** Ask user. Default = Google Finance. If Skip → END SESSION.
-**Step 2B — Python-Assisted Fetch:** Python fetches market data from the selected tool for EVERY Phase 1 opportunity and streams it to the AI. If blocked → `PRIMARY TOOL — BLOCKED`. If field missing → `NOT AVAILABLE`.
+**Step 2B — Python-Assisted Fetch:** Python fetches market data from the selected tool for EVERY Phase 1 opportunity and streams it to the AI. If blocked → `PRIMARY TOOL — BLOCKED`. If field missing → `NOT AVAILABLE`. If Python fails → use the layered fallback (alternate method, then the label).
 **Step 2C — Analyze & Synthesize (AI judges):** Python delivers the data; AI verifies catalyst, assesses timing fit (matched to profile), identifies price levels, applies confidence gate. If Low confidence → `LOW CONFIDENCE — SKIP`.
 
 ### Phase 2 Output — LOCKED TEMPLATE
@@ -855,6 +901,29 @@ STEP S1 — SEC ACCESS (Python fetches; AI decides what to check)
   - Python accesses SEC EDGAR via its official API/library.
   - For each ticker, Python fetches official filings:
     10-K, 10-Q, 8-K, 6-K, Form 4 (insider transactions).
+  - If Python access fails -> S1-FALLBACK (see below).
+
+STEP S1-FALLBACK — LAYERED HANDLING OF SEC ACCESS FAILURE
+  - LAYER 1 — PYTHON SEC FETCH (Primary):
+      Python accesses SEC EDGAR via its official API/library.
+      If success -> parse (STEP S2).
+  - LAYER 2 — ALTERNATE SEC METHOD (Fallback):
+      If Python fails (timeout / 403 / empty / parse error),
+      Python retries with an alternate SEC access method
+      (e.g. sec-api, EDGAR full-text search API, another SEC library).
+      If success -> parse (STEP S2).
+  - LAYER 3 — LABEL (Final):
+      If BOTH the primary SEC fetch and the alternate method fail,
+      Python returns the official failure label. The AI applies it:
+        * BLOCKED — SEC EDGAR COULD NOT BE ACCESSED
+        * then -> UNVERIFIED — SEC DATA NOT AVAILABLE
+  - RULES:
+      * Python ALWAYS tries the primary SEC access first (Layer 1).
+      * Layer 2 is ONLY used when Python fails.
+      * The label is ONLY declared when both layers fail (Layer 3).
+      * Fallback is NOT web_search — SEC filing verification must come
+        from official SEC sources, never from general AI web search.
+      * Python does NOT verify or label; the AI decides the final label.
 
 STEP S2 — PARSE KEY ITEMS (Python prepares)
   - Python extracts from each filing:
@@ -869,10 +938,36 @@ STEP S3 — VERIFY (AI judges, ONE PASS)
     UNVERIFIED — SEC DATA NOT AVAILABLE if the data cannot be retrieved.
 ```
 
+### Python Failure — Fallback Architecture (Phase 3)
+
+```text
+[Step 3A: Python accesses SEC EDGAR (Layer 1)]
+    │
+    ├── SUCCESS ─────────────────▶ [Python parses (STEP S2)]
+    │
+    └── FALLBACK_NEEDED (timeout/403/empty/parse error)
+          │
+          ▼
+    Alternate SEC method (Layer 2)
+    (sec-api / EDGAR full-text search API / another SEC library)
+          │
+          ├── SUCCESS ───────────▶ [Python parses (STEP S2)]
+          │
+          └── FAIL ──────────────▶ LABEL (Layer 3)
+                                    │
+                                    ▼
+                            BLOCKED — SEC EDGAR COULD NOT BE ACCESSED
+                                    │
+                                    ▼
+                     AI assigns -> UNVERIFIED — SEC DATA NOT AVAILABLE
+```
+
+> **Rules:** Python ALWAYS tries the primary SEC access first. Layer 2 (alternate SEC method) is ONLY used when Python fails. The label is ONLY declared when both layers fail. Fallback is NOT web_search — SEC verification must come from official SEC sources. Python does NOT verify or label; the AI applies the label.
+
 ### Phase 3 Steps
 
 **Trigger:** User explicitly asks for SEC EDGAR verification.
-**Step 3A — Python-Assisted SEC Fetch:** Python accesses SEC EDGAR for each ticker and fetches + parses official filings. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
+**Step 3A — Python-Assisted SEC Fetch:** Python accesses SEC EDGAR for each ticker and fetches + parses official filings. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K). If Python fails → use the layered fallback (alternate SEC method, then `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED` → `UNVERIFIED — SEC DATA NOT AVAILABLE`).
 **Step 3B — Label Results (AI judges):** Python delivers the parsed filings; AI compares against Phase 2 and assigns VERIFIED if the SEC filing confirms data. UNVERIFIED — SEC DATA NOT AVAILABLE if data cannot be retrieved.
 
 ### Phase 3 Output — LOCKED TEMPLATE
@@ -1007,13 +1102,15 @@ Sesi tamat.
 |---|---|
 | Source fails to access | `BLOCKED — SOURCE COULD NOT BE ACCESSED` |
 | Primary tool fails | `PRIMARY TOOL — BLOCKED` |
+| Python fetch fails (needs fallback) | `FALLBACK_NEEDED` |
+| All primary tool fetches fail (Phase 2) | `FETCH FAILED — ANALYSIS SKIPPED` |
 | Data missing | `NOT AVAILABLE` |
 | SEC data verified | `VERIFIED` |
 | SEC data missing | `UNVERIFIED — SEC DATA NOT AVAILABLE` |
+| SEC EDGAR access fails (Phase 3) | `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED` |
 | Mechanism fails | `REJECTED` |
 | Confidence Low | `LOW CONFIDENCE — SKIP` |
 | No opportunity | `No qualifying opportunities found for this trader profile and market focus.` |
-| Primary Tool fails | `FETCH FAILED — ANALYSIS SKIPPED` |
 
 ---
 

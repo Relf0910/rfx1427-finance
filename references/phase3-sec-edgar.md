@@ -1,6 +1,6 @@
 # Phase 3 — SEC EDGAR Verification (Python + AI Unified, Opt-in Only)
 
-Source: Framework v4.4
+Source: Framework v4.5
 
 ## Overview
 
@@ -80,6 +80,27 @@ UNVERIFIED — SPECIFIC DATA NOT AVAILABLE
 ```
 
 Do NOT fabricate. Do NOT claim filing was read if it was not.
+
+### Python Failure — Layered Fallback (Phase 3)
+
+If Python SEC access fails, use the layered fallback. Python ALWAYS tries the primary SEC access first; the label is ONLY declared when both methods fail. Fallback is NOT web_search — SEC verification must come from official SEC sources.
+
+```text
+LAYER 1 — PYTHON SEC FETCH (Primary)   -> if success, parse (STEP S2)
+LAYER 2 — ALTERNATE SEC METHOD (Fallback) -> if Python fails, try an alternate
+                                             SEC access (sec-api / EDGAR full-text
+                                             search API / another SEC library).
+                                             If success, parse (STEP S2).
+LAYER 3 — LABEL (Final)                -> if both fail, AI applies:
+                                             BLOCKED — SEC EDGAR COULD NOT BE ACCESSED
+                                             then -> UNVERIFIED — SEC DATA NOT AVAILABLE
+```
+
+Rules:
+- Python ALWAYS tries the primary SEC access first (Layer 1).
+- Layer 2 (alternate SEC method) is ONLY used when Python fails.
+- The label is ONLY declared when both layers fail (Layer 3).
+- Python does NOT verify or label; the AI applies the label.
 
 ## STEP 3B — Label Verification Results (AI judges)
 
