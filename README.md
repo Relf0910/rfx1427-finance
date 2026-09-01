@@ -132,7 +132,7 @@ Three questions, asked one at a time:
 | 1C | Filter by trader profile. Hard rule: NO TICKER = NOISE |
 | 1D | Extract facts. Distinguish FACT vs AI INFERENCE vs ESTIMATE |
 | 1E | Map opportunity: Direction, Materiality (1-5), Confidence, Horizon Fit, Transmission Channel |
-| 1F | Noise Gate: Materiality ≥ 3, Confidence ≥ Medium, Horizon Fit ≠ Poor. Max 7 opportunities |
+| 1F | Noise Gate: Materiality ≥ 3, Confidence ≥ Medium, Horizon Fit ≠ Poor. Max 10 opportunities |
 
 **Output:** Market Scanner report with opportunity cards → `STOP / WAIT FOR USER`
 
@@ -278,7 +278,7 @@ rfx1427-finance/
 | 4 | Materiality < 3 = reject |
 | 5 | Confidence < Medium = reject |
 | 6 | Poor Horizon Fit = reject |
-| 7 | Maximum 7 opportunities |
+| 7 | Maximum 10 opportunities |
 | 8 | Stop after Phase 1 report |
 
 ### Phase 2 — Deep Analysis

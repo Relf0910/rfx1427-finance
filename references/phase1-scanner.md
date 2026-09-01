@@ -142,18 +142,18 @@ Identifiable ticker/company
 Market focus relevant
 ```
 
-Maximum: **7 opportunities**
+Maximum: **10 opportunities**
 
 ### Ranking
 
-If more than 7:
+If more than 10:
 
 1. Materiality (descending)
 2. Confidence (descending)
 3. Horizon Fit (Strong > Partial)
 4. Catalyst clarity
 
-Take maximum 7.
+Take maximum 10.
 
 ---
 
@@ -170,7 +170,7 @@ Akses: [DATE TIME]
 Items scanned: N | Material calls: M | Filtered as noise: K
 ```
 
-Then for every qualifying opportunity (maximum 7), output a card in this exact structure:
+Then for every qualifying opportunity (maximum 10), output a card in this exact structure:
 
 ```markdown
 ## CARD [#N] — [TICKER]

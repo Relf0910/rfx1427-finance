@@ -1,25 +1,41 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.1 that reads any user-provided news source, filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.1 that reads any user-provided news source via Python collection, filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 4.1 — Master Framework (4 Phase + Locked Output Templates + Improved Phase 1)
+## Version 4.1 — Master Framework (4 Phase + Python Pre-Collection + Locked Output Templates)
 
 ## Core Principle
 
 ```text
-SCAN (Phase 1)
-   ↓
-ANALYZE (Phase 2) — Primary Tool Only, NO SEC
-   ↓
-SEC VERIFY (Phase 3) — Opt-in Only
-   ↓
-SUMMARISE (Phase 4)
-   ↓
+PRE-PHASE 1 — PYTHON (News Collection, max 50 items)
+    │
+    ▼
+PHASE 1 — SCANNER (AI reads, filters, scores, max 10)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+PHASE 2 — DEEP ANALYSIS (Primary Tool Only, NO SEC)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+PHASE 3 — SEC EDGAR VERIFICATION (Opt-in Only)
+    │
+    ▼
+STOP — WAIT FOR USER
+    │
+    ▼
+PHASE 4 — WEEKLY BIAS SUMMARY (LOCKED FORMAT)
+    │
+    ▼
 END
 ```
 
@@ -96,7 +112,7 @@ END
 4. Materiality < 3 = reject.
 5. Confidence < Medium in Phase 1 = reject.
 6. Poor Horizon Fit = reject.
-7. Maximum 7 Phase 1 opportunities.
+7. Maximum 10 Phase 1 opportunities.
 8. Phase 2 requires explicit opt-in.
 9. User chooses Primary Tool (Google Finance default).
 10. Phase 2 uses Primary Tool ONLY. No SEC in Phase 2.
@@ -119,6 +135,9 @@ END
 27. Every session starts fresh.
 28. Format Phase 1, 2, 3, 4 are LOCKED. Do not modify.
 29. SEC Verification labels: VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE
+30. Python (Pre-Phase 1) collects news but does NOT filter. Maximum 50 items delivered to AI.
+31. All leftover news items after Phase 1 are discarded. No second pass. No re-reading. First-pass result is final.
+32. AI adapts reading style and opportunity recognition to the user's selected trader profile. The AI becomes the trader type the user chose.
 
 ---
 
@@ -179,7 +198,133 @@ Ask ONE at a time.
 
 ---
 
-## Phase 1 — Scanner (Finviz Default)
+## Pre-Phase 1 — Python News Collection
+
+### Architecture
+
+```text
+PRA-PHASE 1 — PYTHON (News Collection)
+┌──────────────────────────────────────────────┐
+│ 1. Fetch news from user-selected source       │
+│ 2. Extract headlines + summaries + raw text     │
+│ 3. Deduplicate (exact match removal)        │
+│ 4. Sort by timestamp (newest first)          │
+│ 5. Cap at 50 items maximum                 │
+│ 6. Format as JSON array                     │
+│ 7. Deliver to AI for Phase 1                │
+│                                              │
+│ PYTHON DOES NOT:                            │
+│   - Filter by ticker                        │
+│   - Filter by relevance                     │
+│   - Filter by trader profile                │
+│   - Score materiality or confidence          │
+│   - Determine direction (positive/negative)  │
+│   - Make inferences                         │
+│   - Discard any item as "noise"             │
+└──────────────────────────────────────────────┘
+```
+
+### Python Steps
+
+```text
+STEP P1 — FETCH SOURCE
+  - Access the URL or API for the selected news source
+  - Retrieve page content
+  - If source is Finviz: fetch the news page (finviz.com/news.ashx)
+  - If source is Reuters/CNBC/Bloomberg: fetch their market news page
+  - If source is a custom URL: fetch that URL directly
+  - If fetch fails: return error code to AI
+    Error format: { "status": "BLOCKED", "reason": "SOURCE COULD NOT BE ACCESSED" }
+
+STEP P2 — EXTRACT CONTENT
+  - Parse the fetched content
+  - For each news item, extract:
+    - title (headline)
+    - summary (first 1-3 sentences or article excerpt)
+    - url (link to full article, if available)
+    - source (source name, e.g. "Finviz", "Reuters")
+    - timestamp (publication time, if available)
+    - raw_text (full article text if accessible, otherwise the summary)
+  - Do NOT extract tickers — that is AI's job
+  - Do NOT extract company names — that is AI's job
+  - Do NOT filter — keep everything
+
+STEP P3 — DEDUPLICATE
+  - Remove exact duplicate items (same title + same URL)
+  - Do NOT remove "similar" items — only exact duplicates
+
+STEP P4 — SORT
+  - Sort by timestamp, newest first
+  - If timestamp is not available, keep original order from source
+
+STEP P5 — CAP AT 50
+  - Keep maximum 50 items
+  - Discard items 51 and beyond (these are the oldest)
+
+STEP P6 — FORMAT AS JSON
+  - Output as a JSON array
+```
+
+### JSON Output Format (Python → AI)
+
+```json
+{
+  "status": "SUCCESS",
+  "source": "Finviz",
+  "url": "https://finviz.com/news.ashx",
+  "access_time": "2026-08-31T13:13:12Z",
+  "total_fetched": 87,
+  "after_dedup": 72,
+  "delivered": 50,
+  "items": [
+    {
+      "id": 1,
+      "title": "Stock indexes set to retreat as Brent oil tops $90 a barrel",
+      "summary": "Stock indexes set to retreat as Brent oil tops $90 a barrel with U.S. and Iran resuming strikes...",
+      "url": "https://...",
+      "source": "Finviz",
+      "timestamp": "2026-08-31T09:05:00Z",
+      "raw_text": "Stock indexes set to retreat as Brent oil tops $90 a barrel..."
+    }
+  ]
+}
+```
+
+### Python Error Output
+
+If the source cannot be accessed:
+
+```json
+{
+  "status": "BLOCKED",
+  "reason": "SOURCE COULD NOT BE ACCESSED",
+  "source": "Finviz",
+  "url": "https://finviz.com/news.ashx",
+  "items": []
+}
+```
+
+### Python Rules
+
+| Rule | Detail |
+|------|--------|
+| Maximum items delivered | 50 |
+| Minimum items delivered | Whatever is available (even 1) |
+| Deduplication | Exact match only (same title + same URL) |
+| Sorting | Newest first by timestamp |
+| Filtering | NONE — Python does not filter |
+| Scoring | NONE — Python does not score |
+| Ticker extraction | NONE — Python does not extract tickers |
+| Company identification | NONE — Python does not identify companies |
+| Noise removal | NONE — Python does not remove noise |
+
+---
+
+## Phase 1 — Scanner (AI Trader-Reader)
+
+### Phase 1 Concept
+
+The AI is an experienced trader reading a newspaper. Python is the delivery system — it collects up to 50 news items and hands them to the AI. The AI reads everything, filters noise, identifies opportunities, and adapts to the user's trader profile.
 
 ### Phase 1 Steps
 
@@ -190,56 +335,73 @@ Ask the user:
 "What news source for today?"
 - [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
 
-If the user selects a named source (Finviz, Reuters, CNBC, Bloomberg), proceed to Step 1B with that source.
+If the user selects a named source (Finviz, Reuters, CNBC, Bloomberg), proceed to Pre-Phase 1 (Python) with that source.
 
 If the user selects "Other" or provides a custom source:
 - Ask: "What source? Please provide the name or URL."
 - Accept ANY source the user gives: URL, platform name, website, local news site, or document.
 - Do not reject any source. Do not judge the source quality at this stage.
 - Record the source name and URL (if provided).
-- Proceed to Step 1B with that source.
+- Proceed to Pre-Phase 1 (Python) with that source.
 
 If the user does not choose any source, USE FINVIZ AS DEFAULT.
 
 Record the selection as: `news_source`
 
-**Step 1B — Fetch and Read Source (AI as Trader-Reader)**
+**Pre-Phase 1 Trigger — Python News Collection**
 
-Access the selected `news_source` live.
+After Step 1A (source selected), Python fetches, deduplicates, sorts, and caps at 50 items. Python delivers a JSON array to the AI.
 
-Required actions:
-1. Access the source (fetch the page content)
-2. Record: source name, URL (if available), access time
-3. READ the content thoroughly — like an experienced trader reading a newspaper
+If Python returns status "BLOCKED":
+  Output: `BLOCKED — SOURCE COULD NOT BE ACCESSED`
+  Do not proceed. Do not fabricate a report.
 
-How the AI MUST read:
-- Read every headline and article summary carefully
-- Understand the context of each news item — do NOT just scan for keywords
-- Ask internally for each item: "What happened? Who is affected? How big is this?"
-- Look for company names, ticker symbols, financial figures, dates, and events
-- Identify which items could be trading opportunities for the user's trader profile
-- Do NOT skip items just because they seem small — read first, filter later (Step 1C-1F)
+If Python returns status "SUCCESS" with items:
+  Proceed to Step 1B with the delivered items.
+
+**Step 1B — Read All Items (AI as Trader-Reader, Profile-Adaptive)**
+
+The AI receives 30-50 news items from Python.
+The AI must read ALL items before any filtering.
+
+**CRITICAL — Trader Profile Adaptation:**
+
+The AI adapts its READING STYLE and OPPORTUNITY RECOGNITION based on the user's selected `trader_profile`.
+
+| Profile | How AI Reads and What AI Looks For |
+|---------|-----------------------------------|
+| SCALPER | AI looks for: Pre-market gap moves, immediate catalysts (Fed statements, breaking news), earnings reactions NOW, major corporate announcements with instant impact. AI thinks: "Does this create a 5-15 minute catalyst?" Reading style: Fast, focused on immediate action triggers |
+| INTRADAY | AI looks for: Economic data releases (jobs, CPI, Fed), analyst upgrades/downgrades, earnings for today's session, sector-moving news, CEO interviews. AI thinks: "Does this affect today's trading session?" Reading style: Session-focused, catalyst must be actionable within current trading day |
+| SWING | AI looks for: Earnings previews, sector rotation signals, short-interest changes, product launches, industry developments, multi-day catalysts. AI thinks: "Does this create a multi-day to multi-week opportunity?" Reading style: Pattern-focused, looks for sustained moves |
+| INVESTOR | AI looks for: 10-K, 10-Q filings, M&A, regulatory shifts, capital allocation decisions, competitive moat changes, new CEO. AI thinks: "Does this change the long-term business thesis?" Reading style: Thesis-focused, looks for fundamental shifts |
+
+The AI does NOT tell the user "I am reading as a [profile]." The adaptation is internal.
 
 Reading rules:
 - The AI reads as a HUMAN READER, not as a keyword-matching script
 - The AI understands business context: M&A, earnings, regulatory changes, geopolitical events, product launches, analyst ratings, sector shifts
 - The AI distinguishes between: major market-moving news vs minor updates vs general commentary
-- The AI pays attention to the user's `market` selection — if market is "US", prioritize US-listed companies and US market news
+- The AI pays attention to the user's `market` selection — if market is "US", prioritize US-listed companies
 
-Source Access Rule:
+**Step 1C — Filter By Trader Profile**
 
-If the source fails to access or returns no readable content:
+After reading all items, the AI filters based on the user's `trader_profile`.
 
-`BLOCKED — SOURCE COULD NOT BE ACCESSED`
+Profile definitions:
 
-Do not claim the source was read. Do not generate a fabricated scanner report.
-Do not use training knowledge as a substitute for reading the actual source.
+| Profile | Time Horizon | What Qualifies |
+|---------|--------------|----------------|
+| SCALPER | 5-15 minutes | Pre-market gap, earnings reaction, Fed statement, major breaking news, immediate corporate catalyst |
+| INTRADAY | Current session | Economic data, CEO interview, analyst upgrade/downgrade, earnings, sector-moving news, regulatory announcement |
+| SWING | Days to weeks | Earnings preview, sector rotation, guidance change, short-interest changes, product catalyst, industry developments |
+| INVESTOR | Long-term | 10-K, 10-Q, new CEO, M&A, regulatory shift, capital allocation, competitive moat, structural industry change |
 
-**Step 1C — Profile Filter:** Apply trader profile. Hard rule: NO TICKER = NOISE.
+Hard rule — NO TICKER = NOISE:
+If a news item has no identifiable public company ticker, it is NOISE. Discard immediately.
 
 **Step 1D — Extract Facts and Assess (Trader Judgment)**
 
-For each news item that mentions a company or ticker, the AI extracts and assesses:
+For each news item that passed the profile filter, the AI extracts and assesses:
 
 **Extract:**
 - Company name
@@ -250,62 +412,84 @@ For each news item that mentions a company or ticker, the AI extracts and assess
 - Source
 
 **Assess (AI applies trader judgment):**
-- Is this a real, identifiable public company with a ticker? If NO → mark as NOISE and discard immediately
 - How significant is this news for this specific company?
 - Does this news create a trading opportunity for the user's trader profile?
-- What is the transmission mechanism? (How does this news → business impact → financial expectation → potential price impact?)
+- What is the transmission mechanism?
 
 **Fact Classification (MANDATORY):**
+- **FACT** — directly supported by the source content
+- **AI INFERENCE** — the AI's interpretation based on facts (source does not state directly)
+- **ESTIMATE** — approximation based on available data
 
-For every piece of information, label it as one of three categories:
-- **FACT** — directly supported by the source content. The source states this clearly.
-- **AI INFERENCE** — the AI's interpretation or conclusion based on the facts. The source does not state this directly, but the AI reasons it from context.
-- **ESTIMATE** — an approximation based on available data. The exact figure is not available, but the AI estimates based on related information.
+Do NOT mix categories. Every claim must be labelled.
 
-Do NOT mix these categories. Every claim must be labelled.
-Do NOT present an inference as a fact. Do NOT present an estimate as a fact.
+**Step 1E — Map Opportunity**
 
-**Noise identification at this stage:**
-- News items with no ticker or identifiable public company → NOISE (discard)
-- News items about private companies with no public listing → NOISE (discard)
-- General market commentary with no specific company → NOISE (discard)
-- Opinion pieces or editorials with no actionable catalyst → NOISE (discard)
-- Items unrelated to the user's `market` selection → NOISE (discard)
+For each surviving candidate:
 
-**Step 1E — Map Opportunity:** Direction, Materiality (1-5), Confidence (High/Medium/Low), Horizon Fit (Strong/Partial/Poor), Transmission Channel.
+**Direction:** Positive / Negative / Mixed / Neutral
 
-**Step 1F — Noise Gate (Final Filter — Noise Is Discarded)**
+**Transmission Channel:**
+```text
+NEWS -> BUSINESS IMPACT -> FINANCIAL/EXPECTATION -> POTENTIAL PRICE IMPACT
+```
 
-Every candidate must pass ALL of the following checks:
+**Materiality (1-5):**
+
+| Score | Meaning |
+|------:|---------|
+| 1 | Minimal — No meaningful impact on stock price |
+| 2 | Low — Minor impact, unlikely to move price significantly |
+| 3 | Moderate — Meaningful impact, could move price |
+| 4 | High — Significant impact, likely to move price |
+| 5 | Very High — Major catalyst, very likely to move price sharply |
+
+**Confidence:**
+- **HIGH** — Strong source support, clear catalyst, clear mechanism, low uncertainty
+- **MEDIUM** — Core facts supported, mechanism reasonably supported, some uncertainty
+- **LOW** — Missing data, conflicting evidence, weak mechanism, high uncertainty
+
+**Horizon Fit:**
+- Strong — Catalyst timing matches trader profile's horizon exactly
+- Partial — Catalyst timing partially matches, some timing risk
+- Poor — Catalyst timing does not match trader profile's horizon
+
+**Step 1F — Noise Gate (Final Filter)**
+
+Every candidate must pass ALL checks:
 
 | Check | Rule | If Failed |
-|-------|------|----------|
-| Ticker / Company identifiable | Must have a real public company ticker | NOISE — discard |
-| Market relevant | Must match the user's `market` selection | NOISE — discard |
-| Materiality >= 3 | Score 1-5, minimum 3 to pass | NOISE — discard |
-| Confidence >= Medium | Must be High or Medium (not Low) | NOISE — discard |
-| Horizon Fit != Poor | Must be Strong or Partial (not Poor) | NOISE — discard |
+|-------|------|-----------|
+| Ticker / Company | Must have a real public company ticker | NOISE — discard |
+| Market relevant | Must match user's `market` selection | NOISE — discard |
+| Materiality >= 3 | Score 1-5, minimum 3 | NOISE — discard |
+| Confidence >= Medium | Must be High or Medium | NOISE — discard |
+| Horizon Fit != Poor | Must be Strong or Partial | NOISE — discard |
 
 **Noise handling rules:**
-- Items that fail ANY check above are NOISE
-- NOISE items are DISCARDED — do not include them in the report
-- Do not list noise items in the output
-- The report header shows "Filtered as noise: [K]" to acknowledge items were filtered
-- Do not explain why individual items were filtered — just discard them
+- Items that fail ANY check are NOISE
+- NOISE items are DISCARDED — do not include in report
+- Report header shows "Filtered as noise: [K]"
+- Do not explain why individual items were filtered
 
-**Maximum opportunities:** 7
+**Maximum opportunities: 10**
 
-If more than 7 opportunities pass the Noise Gate, rank by:
+If more than 10 pass, rank by:
 1. Materiality (highest first)
 2. Confidence (highest first)
 3. Horizon Fit (Strong > Partial)
-4. Catalyst clarity (most clear first)
+4. Catalyst clarity
 
-Take the top 7. Discard the rest (they become noise).
+Take top 10. Discard the rest.
+
+**Leftover handling — MANDATORY:**
+- If AI finds 10 qualifying -> output 10 cards, discard ALL remaining
+- If AI finds 7 qualifying -> output 7 cards, discard ALL remaining
+- If AI finds 3 qualifying -> output 3 cards, discard ALL remaining
+- If AI finds 0 qualifying -> output "No qualifying opportunities found"
+- ALL leftover items are DISCARDED. No second pass. No re-reading.
 
 ### Phase 1 Output — LOCKED TEMPLATE
-
-> **INSTRUCTION:** Reproduce EXACTLY this structure. Replace `[BRACKETS]` with live data. Use `Stock X`, `Stock Y` as the card numbering pattern. Do not add or remove anything.
 
 ```markdown
 # MARKET SCANNER — [DATE] | Source: [SOURCE]
@@ -329,7 +513,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 [Factual summary. Explicitly label FACT / INFERENCE / ESTIMATE where relevant]
 
 ### Why It Matters
-[AI reasoning: 1–3 sentences explaining WHY this news matters for this specific trader profile. This is AI analysis, NOT fact restatement. Explain the transmission mechanism: how this news → business impact → financial/expectation change → potential price impact. Think like an experienced trader: "If I read this in the newspaper, why would I care about this stock today?"]
+[AI reasoning: 1–3 sentences explaining WHY this news matters for this specific trader profile. This is AI analysis, NOT fact restatement. Explain the transmission mechanism: how this news -> business impact -> financial/expectation change -> potential price impact. Think like an experienced trader: "If I read this in the newspaper, why would I care about this stock today?"]
 
 ### Key Data
 - [Key number or fact 1]
@@ -355,7 +539,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 [Factual summary. Explicitly label FACT / INFERENCE / ESTIMATE where relevant]
 
 ### Why It Matters
-[AI reasoning: 1–3 sentences explaining WHY this news matters for this specific trader profile. This is AI analysis, NOT fact restatement. Explain the transmission mechanism: how this news → business impact → financial/expectation change → potential price impact. Think like an experienced trader: "If I read this in the newspaper, why would I care about this stock today?"]
+[AI reasoning: 1–3 sentences explaining WHY this news matters for this specific trader profile. This is AI analysis, NOT fact restatement. Explain the transmission mechanism: how this news -> business impact -> financial/expectation change -> potential price impact. Think like an experienced trader: "If I read this in the newspaper, why would I care about this stock today?"]
 
 ### Key Data
 - [Key number or fact 1]
@@ -367,7 +551,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 
 ---
 
-[... repeat for each qualifying opportunity, maximum 7 cards ...]
+[... repeat for each qualifying opportunity, maximum 10 cards ...]
 
 ---
 
