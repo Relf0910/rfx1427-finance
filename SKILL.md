@@ -363,6 +363,24 @@ All sources below are **FREE and accessible** (verified by testing). The user se
 | Noise removal | NONE — Python does not remove noise |
 | Judgement | NONE — Python never judges; the AI judges |
 
+### Source Data Notes (Verified on v4.5 Testing)
+
+Known response structures verified by live testing. Python must read these correctly; the AI still judges the content.
+
+| Source | Verified Structure | Parsing Note |
+|--------|-------------------|--------------|
+| Finviz news (`finvizfinance.news`) | `get_news()` returns dict with `news` and `blogs`, each a pandas DataFrame with columns `Date, Title, Source, Link` | Read rows from `d['news']` |
+| Yahoo Finance news (`yfinance`) | `Ticker.news` returns a list of dicts; **title is at `item['content']['title']`**, not `item['title']` | Access `content.title`; `pubDate` in `content` |
+| Yahoo Finance RSS via feedparser | `parse()` returns entries with `title` | Standard RSS |
+| PR Newswire RSS via feedparser | `parse()` returns 20 entries, `status` 200 | Standard RSS |
+| SEC EDGAR submissions | `data.sec.gov/submissions/CIK{cik}.json` → `filings.recent` with `form`, `accessionNumber`, `primaryDocument` | Use `Host: data.sec.gov` header |
+| SEC EDGAR filing docs | `www.sec.gov/Archives/edgar/data/{cik}/{acc_no_dashes}/{primaryDocument}` | Use `Host: www.sec.gov` header (not data.sec.gov) |
+| GlobeNewswire | RSS returned HTTP 400; HTML page timed out during testing | Expect Layer 2 fallback (web_search) |
+| StockAnalysis.com | News page returned HTTP 404 during testing | Expect Layer 2 fallback (web_search) |
+| Barchart | HTTP 200 but JS-rendered | Semantic parse may need consolidation/fallback |
+
+> These are live-test observations, not guarantees. Sources may change their structure at any time; if the expected structure is not found, treat as `FALLBACK_NEEDED` and use the layered fallback.
+
 ### Phase 1 Steps
 
 **Step 1A — News Source Selection**
