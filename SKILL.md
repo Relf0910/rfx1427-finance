@@ -1,13 +1,13 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.1 that reads any user-provided news source via Python collection, filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.2 that reads news from Finviz (default) or any of the 9 verified free alternative sources or a custom user-provided source via Python collection with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED), filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 4.1 — Master Framework (4 Phase + Python Pre-Collection + Locked Output Templates)
+## Version 4.2 — Master Framework (4 Phase + Python Pre-Collection + Source Library Map + Fallback Architecture + Locked Output Templates)
 
 ## Core Principle
 
@@ -138,6 +138,8 @@ END
 30. Python (Pre-Phase 1) collects news but does NOT filter. Maximum 50 items delivered to AI.
 31. All leftover news items after Phase 1 are discarded. No second pass. No re-reading. First-pass result is final.
 32. AI adapts reading style and opportunity recognition to the user's selected trader profile. The AI becomes the trader type the user chose.
+33. Source access uses a 3-layer hybrid fallback: Layer 1 — Python fetch (using Source Library Map libraries); Layer 2 — AI web_search fallback (if Python fails); Layer 3 — BLOCKED label (if both fail). Python ALWAYS tries first. web_search is only used when Python fails. Known blocked sources (CNBC, Reuters, Bloomberg, etc.) skip to Layer 2.
+34. Finviz is the default and primary news source. All sources in the Source Library Map are free and verified. The user may select any source or provide a custom one. The AI must accept any source the user provides without rejection.
 
 ---
 
@@ -206,12 +208,19 @@ Ask ONE at a time.
 PRA-PHASE 1 — PYTHON (News Collection)
 ┌──────────────────────────────────────────────┐
 │ 1. Fetch news from user-selected source       │
+│    (Finviz default, or 9 free alternatives,    │
+│     or custom source — see Source Library Map)│
 │ 2. Extract headlines + summaries + raw text     │
 │ 3. Deduplicate (exact match removal)        │
 │ 4. Sort by timestamp (newest first)          │
 │ 5. Cap at 50 items maximum                 │
 │ 6. Format as JSON array                     │
 │ 7. Deliver to AI for Phase 1                │
+│                                              │
+│ IF FETCH FAILS → FALLBACK:                   │
+│   Python returns FALLBACK_NEEDED              │
+│   AI uses web_search tool to collect news      │
+│   If web_search also fails → BLOCKED          │
 │                                              │
 │ PYTHON DOES NOT:                            │
 │   - Filter by ticker                        │
@@ -229,12 +238,20 @@ PRA-PHASE 1 — PYTHON (News Collection)
 ```text
 STEP P1 — FETCH SOURCE
   - Access the URL or API for the selected news source
-  - Retrieve page content
-  - If source is Finviz: fetch the news page (finviz.com/news.ashx)
-  - If source is Reuters/CNBC/Bloomberg: fetch their market news page
-  - If source is a custom URL: fetch that URL directly
-  - If fetch fails: return error code to AI
-    Error format: { "status": "BLOCKED", "reason": "SOURCE COULD NOT BE ACCESSED" }
+  - Retrieve page content using the appropriate Python library (see Source Library Map below)
+  - If fetch succeeds: parse content and proceed to STEP P2
+  - If fetch fails (HTTP 403, timeout, empty response, parse error):
+      FALLBACK STEP 1 — AI WEB SEARCH
+        Python returns status "FALLBACK_NEEDED" to the AI.
+        The AI then uses its built-in web_search tool to search for
+        recent financial news from the same source or general market news.
+        The AI collects up to 50 items from search results, formats them
+        into the same JSON structure, and proceeds to Step 1B.
+      FALLBACK STEP 2 — LABEL BLOCKED
+        If both Python fetch AND AI web_search fail:
+        Return final error to AI:
+          { "status": "BLOCKED", "reason": "SOURCE COULD NOT BE ACCESSED", "items": [] }
+        Do NOT proceed. Do NOT fabricate a report.
 
 STEP P2 — EXTRACT CONTENT
   - Parse the fetched content
@@ -252,6 +269,7 @@ STEP P2 — EXTRACT CONTENT
 STEP P3 — DEDUPLICATE
   - Remove exact duplicate items (same title + same URL)
   - Do NOT remove "similar" items — only exact duplicates
+  - Do NOT remove items that seem like the same topic — only exact matches
 
 STEP P4 — SORT
   - Sort by timestamp, newest first
@@ -260,6 +278,8 @@ STEP P4 — SORT
 STEP P5 — CAP AT 50
   - Keep maximum 50 items
   - Discard items 51 and beyond (these are the oldest)
+  - If source has fewer than 50 items, keep all of them
+  - Minimum: deliver whatever is available (even if only 5 items)
 
 STEP P6 — FORMAT AS JSON
   - Output as a JSON array
@@ -292,7 +312,22 @@ STEP P6 — FORMAT AS JSON
 
 ### Python Error Output
 
-If the source cannot be accessed:
+If the source cannot be accessed, Python returns one of two statuses:
+
+**Fallback needed** (Python fetch failed — AI should try web_search):
+
+```json
+{
+  "status": "FALLBACK_NEEDED",
+  "reason": "PYTHON FETCH FAILED",
+  "source": "Finviz",
+  "url": "https://finviz.com/news.ashx",
+  "error": "HTTP 403 Forbidden",
+  "items": []
+}
+```
+
+**Blocked** (both Python AND AI web_search failed):
 
 ```json
 {
@@ -318,6 +353,53 @@ If the source cannot be accessed:
 | Company identification | NONE — Python does not identify companies |
 | Noise removal | NONE — Python does not remove noise |
 
+### Source Library Map (Verified Free Sources)
+
+All sources below are **FREE and accessible** (verified by testing). The user selects one at Step 1A. Python uses the corresponding library.
+
+#### Tier 1 — Primary (Default)
+
+| Source | Python Library | Install Command | Access Method | Notes |
+|--------|---------------|-----------------|---------------|-------|
+| **Finviz** | `finvizfinance` | `pip install finvizfinance` | Scrape (HTML) | **DEFAULT SOURCE.** Most complete: news, screener, quotes. 32KB+ content. No API key needed. |
+
+#### Tier 2 — Optional Alternatives (Free)
+
+| Source | Python Library | Install Command | Access Method | Notes |
+|--------|---------------|-----------------|---------------|-------|
+| Yahoo Finance | `yfinance` | `pip install yfinance` | API (free) | Stable, popular. News + price + fundamentals. No API key. |
+| Investing.com | `investpy` | `pip install investpy` | Scrape | Broad coverage: forex, stocks, commodities. Free. |
+| TradingView | `tradingview-scraper` | `pip install tradingview-scraper` | Scrape | Screener, ideas, community signals. |
+| StockTitan | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape (HTML) | Real-time ticker-focused news. |
+| PR Newswire | `feedparser` | `pip install feedparser` | RSS feed (free) | Official corporate press releases. |
+| GlobeNewswire | `feedparser` | `pip install feedparser` | RSS feed (free) | Official corporate press releases. |
+| Motley Fool | `feedparser` or `BeautifulSoup4` | `pip install feedparser` | RSS / Scrape | Stock analysis and commentary. |
+| Barchart | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape (with headers) | Market data + news. Needs User-Agent header. |
+| StockAnalysis.com | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape | Fundamentals + news data. |
+
+#### Tier 3 — Custom Sources
+
+| Source | Method | Notes |
+|--------|--------|-------|
+| Custom URL (user-provided) | `requests` + `BeautifulSoup4` | Accept ANY URL the user gives. Try generic scrape. |
+| RSS feed URL (user-provided) | `feedparser` | If URL ends in `.xml` or `/feed`, use feedparser. |
+| Other platform name | `requests` + `BeautifulSoup4` | Try generic scrape first. If blocked, fallback to web_search. |
+
+#### Sources That Are BLOCKED (Do NOT use Python for these — use web_search fallback directly)
+
+| Source | Reason |
+|--------|--------|
+| CNBC | Access Denied, JS-rendered (needs Selenium or paid API) |
+| Reuters | Paywall |
+| Bloomberg | Paywall |
+| Seeking Alpha | Blocked |
+| TheStreet | Blocked |
+| Investopedia | Blocked |
+| WSJ | Paywall |
+| MarketWatch | Minimal content returned |
+
+> **If the user selects one of these blocked sources**, Python should skip directly to the FALLBACK step (AI web_search), because Python fetch will fail. The AI should inform the user that the source is blocked and proceed with web_search fallback.
+
 ---
 
 ## Phase 1 — Scanner (AI Trader-Reader)
@@ -333,31 +415,89 @@ The AI is an experienced trader reading a newspaper. Python is the delivery syst
 Ask the user:
 
 "What news source for today?"
-- [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
+- [Finviz (Default)] [Yahoo Finance] [Investing.com] [TradingView]
+- [StockTitan] [PR Newswire] [GlobeNewswire] [Motley Fool]
+- [Barchart] [StockAnalysis.com] [Other]
 
-If the user selects a named source (Finviz, Reuters, CNBC, Bloomberg), proceed to Pre-Phase 1 (Python) with that source.
+SOURCE PRIORITY:
+- Finviz is the DEFAULT and PRIMARY source.
+- If the user does not choose, or says "default", USE FINVIZ.
+- All other listed sources are FREE alternatives (see Source Library Map).
+- All sources are equally valid — the user may pick any.
+
+If the user selects a named source from the list above:
+- Record the source name and proceed to Pre-Phase 1 (Python).
+- Python uses the corresponding library from the Source Library Map.
 
 If the user selects "Other" or provides a custom source:
 - Ask: "What source? Please provide the name or URL."
-- Accept ANY source the user gives: URL, platform name, website, local news site, or document.
+- Accept ANY source the user gives: URL, platform name, website, local news site, RSS feed, or document.
 - Do not reject any source. Do not judge the source quality at this stage.
 - Record the source name and URL (if provided).
+- If the source is a known BLOCKED source (CNBC, Reuters, Bloomberg, etc.):
+  Inform the user: "This source may be blocked for direct access. Python will try, and if it fails, AI will use web_search as fallback."
 - Proceed to Pre-Phase 1 (Python) with that source.
 
 If the user does not choose any source, USE FINVIZ AS DEFAULT.
 
 Record the selection as: `news_source`
 
+**Fallback Architecture (Hybrid Source Access)**
+
+The framework uses a 3-layer hybrid approach:
+
+LAYER 1 — PYTHON FETCH (Primary)
+  Python uses the Source Library Map to fetch news.
+  If fetch succeeds → deliver JSON to AI → proceed to Step 1B.
+
+LAYER 2 — AI WEB_SEARCH (Fallback)
+  If Python fetch fails (HTTP 403, timeout, empty, parse error):
+  Python returns status "FALLBACK_NEEDED" to the AI.
+  The AI then uses its built-in web_search tool to search for:
+    "{source name} financial news today {date}"
+  or if source is generic:
+    "financial market news today {date}"
+  The AI collects up to 50 items from search results.
+  Each search result becomes a JSON item with:
+    title, summary (snippet), url, source, timestamp (if available), raw_text (snippet)
+  The AI formats these into the same JSON structure and proceeds to Step 1B.
+
+LAYER 3 — BLOCKED (Final)
+  If BOTH Python fetch AND AI web_search fail:
+  Output: `BLOCKED — SOURCE COULD NOT BE ACCESSED`
+  Do not proceed. Do not fabricate a report.
+  Do not use training knowledge as a substitute.
+
+RULES:
+- Python ALWAYS tries first (Layer 1).
+- web_search is ONLY used when Python fails (Layer 2).
+- BLOCKED is ONLY declared when both layers fail (Layer 3).
+- The AI must NOT skip Python and go straight to web_search
+  unless the source is in the known BLOCKED list.
+- The AI must NOT fabricate news from training knowledge under any circumstance.
+
 **Pre-Phase 1 Trigger — Python News Collection**
 
 After Step 1A (source selected), Python fetches, deduplicates, sorts, and caps at 50 items. Python delivers a JSON array to the AI.
+
+If Python returns status "SUCCESS" with items:
+  Proceed to Step 1B with the delivered items.
+
+If Python returns status "FALLBACK_NEEDED":
+  The AI uses its built-in web_search tool to search for recent
+  financial news from the same source or general market news.
+  The AI collects up to 50 items, formats them into the same JSON
+  structure (title, summary, url, source, timestamp, raw_text),
+  and proceeds to Step 1B.
+  If web_search also returns no usable results → proceed to BLOCKED.
 
 If Python returns status "BLOCKED":
   Output: `BLOCKED — SOURCE COULD NOT BE ACCESSED`
   Do not proceed. Do not fabricate a report.
 
-If Python returns status "SUCCESS" with items:
-  Proceed to Step 1B with the delivered items.
+If the selected source is in the known BLOCKED list (CNBC, Reuters, Bloomberg, etc.):
+  Python skips fetch and returns "FALLBACK_NEEDED" immediately.
+  The AI proceeds to web_search fallback.
 
 **Step 1B — Read All Items (AI as Trader-Reader, Profile-Adaptive)**
 
@@ -382,6 +522,23 @@ Reading rules:
 - The AI understands business context: M&A, earnings, regulatory changes, geopolitical events, product launches, analyst ratings, sector shifts
 - The AI distinguishes between: major market-moving news vs minor updates vs general commentary
 - The AI pays attention to the user's `market` selection — if market is "US", prioritize US-listed companies
+
+Source Access Rule:
+
+If Python returns SUCCESS with items → proceed to read.
+
+If Python returns FALLBACK_NEEDED:
+  The AI uses web_search to collect up to 50 items from search results.
+  Format each search result into the JSON structure (title, summary/snippet,
+  url, source, timestamp if available, raw_text/snippet).
+  Proceed to read the collected items.
+
+If both Python AND web_search fail (BLOCKED):
+
+`BLOCKED — SOURCE COULD NOT BE ACCESSED`
+
+Do not claim the source was read. Do not generate a fabricated report.
+Do not use training knowledge as a substitute for reading the actual source.
 
 **Step 1C — Filter By Trader Profile**
 
