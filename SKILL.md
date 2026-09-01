@@ -1,22 +1,20 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.2 that reads news from Finviz (default) or any of the 9 verified free alternative sources or a custom user-provided source via Python collection with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED), filters public companies by trader profile, market focus, time horizon, materiality and confidence, and performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.3 where Python works directly with the AI in a single Phase 1 flow — Python brings the AI to the selected news source and assists reading in real time, the AI identifies the best positive opportunities per trader profile (max 7 list), and filters noise in one pass. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Performs Deep Analysis with Primary Tool. SEC EDGAR Verification only on explicit user opt-in. Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
 
 Financial News Scanner + Deep Analysis + SEC Verification + Weekly Bias Summary framework with strict gate controls, fact-based approach, and official SEC EDGAR verification.
 
-## Version 4.2 — Master Framework (4 Phase + Python Pre-Collection + Source Library Map + Fallback Architecture + Locked Output Templates)
+## Version 4.3 — Master Framework (4 Phase + Python–AI Unified Phase 1 + Positive-Only Scan + Locked Output Templates)
 
 ## Core Principle
 
 ```text
-PRE-PHASE 1 — PYTHON (News Collection, max 50 items)
-    │
-    ▼
-PHASE 1 — SCANNER (AI reads, filters, scores, max 10)
-    │
+PHASE 1 — SCANNER (Python + AI unified, positive-only, max 7)
+    │  Python brings AI directly to the selected source;
+    │  AI reads, filters, scores in one pass
     ▼
 STOP — WAIT FOR USER
     │
@@ -112,7 +110,7 @@ END
 4. Materiality < 3 = reject.
 5. Confidence < Medium in Phase 1 = reject.
 6. Poor Horizon Fit = reject.
-7. Maximum 10 Phase 1 opportunities.
+7. Maximum 7 positive Phase 1 opportunities.
 8. Phase 2 requires explicit opt-in.
 9. User chooses Primary Tool (Google Finance default).
 10. Phase 2 uses Primary Tool ONLY. No SEC in Phase 2.
@@ -135,11 +133,13 @@ END
 27. Every session starts fresh.
 28. Format Phase 1, 2, 3, 4 are LOCKED. Do not modify.
 29. SEC Verification labels: VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE
-30. Python (Pre-Phase 1) collects news but does NOT filter. Maximum 50 items delivered to AI.
+30. Python works directly with the AI inside Phase 1 (unified flow). Python brings the AI to the selected source and assists reading in real time — there is NO separate collection step. Python does NOT filter, score, or judge; the AI judges.
 31. All leftover news items after Phase 1 are discarded. No second pass. No re-reading. First-pass result is final.
 32. AI adapts reading style and opportunity recognition to the user's selected trader profile. The AI becomes the trader type the user chose.
 33. Source access uses a 3-layer hybrid fallback: Layer 1 — Python fetch (using Source Library Map libraries); Layer 2 — AI web_search fallback (if Python fails); Layer 3 — BLOCKED label (if both fail). Python ALWAYS tries first. web_search is only used when Python fails. Known blocked sources (CNBC, Reuters, Bloomberg, etc.) skip to Layer 2.
 34. Finviz is the default and primary news source. All sources in the Source Library Map are free and verified. The user may select any source or provide a custom one. The AI must accept any source the user provides without rejection.
+35. Phase 1 is POSITIVE-ONLY. Negative, mixed, and neutral items are discarded. Only positive opportunities are reported.
+36. Phase 1 outputs the best 7 positive opportunities (0-7). It does NOT force-fill to reach 7.
 
 ---
 
@@ -200,158 +200,103 @@ Ask ONE at a time.
 
 ---
 
-## Pre-Phase 1 — Python News Collection
+## Phase 1 — Scanner (Python + AI Unified)
 
-### Architecture
+### Phase 1 Concept
+
+The AI is an experienced trader. **Python works directly with the AI inside Phase 1** — Python is the AI's tool that brings the AI to the selected news source and assists reading in real time. Python does NOT collect first and hand over later (no two-pass). Instead:
+
+- Python fetches/streams the source and formats each news item.
+- The AI reads each item as it arrives, applies the trader profile, identifies opportunities, and filters noise — **in one single pass**.
+- Python assists by preparing, formatting, and (if needed) searching; **the AI judges**.
+
+The user selects a source (e.g. Finviz or another), Python brings the AI directly to that source, and the AI does the trader work live with Python's assistance.
+
+**POSITIVE-ONLY SCAN:** Only positive opportunities are reported. Negative, mixed, and neutral items are discarded. The result is the **best 7 positive opportunities** for the user's trader profile.
+
+### Python + AI Division of Work
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Fetch/stream the source, format each item, assist search fallback. Python does NOT filter, score, or judge. |
+| **AI** | Reads each item, applies trader profile, identifies tickers, judges direction, filters noise, ranks, outputs the best 7 positive cards. |
+
+### Python + AI Streaming Flow (ONE PASS)
 
 ```text
-PRA-PHASE 1 — PYTHON (News Collection)
-┌──────────────────────────────────────────────┐
-│ 1. Fetch news from user-selected source       │
-│    (Finviz default, or 9 free alternatives,    │
-│     or custom source — see Source Library Map)│
-│ 2. Extract headlines + summaries + raw text     │
-│ 3. Deduplicate (exact match removal)        │
-│ 4. Sort by timestamp (newest first)          │
-│ 5. Cap at 50 items maximum                 │
-│ 6. Format as JSON array                     │
-│ 7. Deliver to AI for Phase 1                │
-│                                              │
-│ IF FETCH FAILS → FALLBACK:                   │
-│   Python returns FALLBACK_NEEDED              │
-│   AI uses web_search tool to collect news      │
-│   If web_search also fails → BLOCKED          │
-│                                              │
-│ PYTHON DOES NOT:                            │
-│   - Filter by ticker                        │
-│   - Filter by relevance                     │
-│   - Filter by trader profile                │
-│   - Score materiality or confidence          │
-│   - Determine direction (positive/negative)  │
-│   - Make inferences                         │
-│   - Discard any item as "noise"             │
-└──────────────────────────────────────────────┘
+[Python brings AI to selected source]
+    │
+    ▼
+[Stream/read news item by item]
+    │
+    ▼
+[AI reads each item with trader-profile lens]
+    │
+    ▼
+[AI discards negative/mixed/neutral + noise immediately]
+    │
+    ▼
+[AI keeps positive candidates only]
+    │
+    ▼
+[AI ranks -> best 7 positive]
+    │
+    ▼
+STOP — WAIT FOR USER
 ```
 
-### Python Steps
+### Python Steps (Assisted by AI)
 
 ```text
-STEP P1 — FETCH SOURCE
-  - Access the URL or API for the selected news source
-  - Retrieve page content using the appropriate Python library (see Source Library Map below)
-  - If fetch succeeds: parse content and proceed to STEP P2
-  - If fetch fails (HTTP 403, timeout, empty response, parse error):
-      FALLBACK STEP 1 — AI WEB SEARCH
-        Python returns status "FALLBACK_NEEDED" to the AI.
-        The AI then uses its built-in web_search tool to search for
-        recent financial news from the same source or general market news.
-        The AI collects up to 50 items from search results, formats them
-        into the same JSON structure, and proceeds to Step 1B.
-      FALLBACK STEP 2 — LABEL BLOCKED
+STEP P1 — FETCH SOURCE (Python fetches; AI decides how)
+  - Python accesses the selected source using the appropriate library
+    (see Source Library Map below).
+  - AI tells Python which source to use (from Step 1A).
+  - If fetch succeeds: stream content to AI item by item.
+  - If fetch fails (HTTP 403, timeout, empty, parse error):
+      AI WEB_SEARCH FALLBACK:
+        Python reports status "FALLBACK_NEEDED" to the AI.
+        The AI uses its built-in web_search tool to search for recent
+        financial news from the same source or general market news.
+        The AI collects up to 50 search results, formats them into items,
+        and reads them with its trader lens.
+      BLOCKED:
         If both Python fetch AND AI web_search fail:
-        Return final error to AI:
-          { "status": "BLOCKED", "reason": "SOURCE COULD NOT BE ACCESSED", "items": [] }
+        { "status": "BLOCKED", "reason": "SOURCE COULD NOT BE ACCESSED", "items": [] }
         Do NOT proceed. Do NOT fabricate a report.
 
-STEP P2 — EXTRACT CONTENT
-  - Parse the fetched content
-  - For each news item, extract:
+STEP P2 — EXTRACT CONTENT (Python prepares each item)
+  - Python parses the fetched content.
+  - For each news item, Python extracts:
     - title (headline)
     - summary (first 1-3 sentences or article excerpt)
     - url (link to full article, if available)
-    - source (source name, e.g. "Finviz", "Reuters")
+    - source (source name, e.g. "Finviz", "Yahoo")
     - timestamp (publication time, if available)
-    - raw_text (full article text if accessible, otherwise the summary)
-  - Do NOT extract tickers — that is AI's job
-  - Do NOT extract company names — that is AI's job
-  - Do NOT filter — keep everything
+    - raw_text (short excerpt, max ~300 characters, otherwise the summary)
+  - Python does NOT extract tickers or company names — that is the AI's job.
+  - Python does NOT filter — it prepares every item for the AI.
 
-STEP P3 — DEDUPLICATE
-  - Remove exact duplicate items (same title + same URL)
-  - Do NOT remove "similar" items — only exact duplicates
-  - Do NOT remove items that seem like the same topic — only exact matches
+STEP P3 — DEDUPLICATE (Python, with light normalization)
+  - Remove exact duplicates (same title + same URL), after normalizing
+    whitespace and capitalization.
+  - Remove near-duplicates (very similar titles from the same story).
+  - Keep a maximum of 3 articles per topic.
 
 STEP P4 — SORT
-  - Sort by timestamp, newest first
-  - If timestamp is not available, keep original order from source
+  - Sort by timestamp, newest first.
+  - If timestamp is not available, keep the source's original order.
 
-STEP P5 — CAP AT 50
-  - Keep maximum 50 items
-  - Discard items 51 and beyond (these are the oldest)
-  - If source has fewer than 50 items, keep all of them
-  - Minimum: deliver whatever is available (even if only 5 items)
+STEP P5 — FORM / DELIVER
+  - Prepare up to 50 items (or fewer if source has less).
+  - Deliver items to the AI for live reading.
+  - The AI reads and scores each item as it is delivered (no separate
+    collection-then-read two-pass).
 
-STEP P6 — FORMAT AS JSON
-  - Output as a JSON array
+STEP P6 — JSON ENVELOPE (recorded for audit)
+  - Each item carries: id, title, summary, url, source, timestamp, raw_text,
+    collection_method ("python" or "web_search_fallback").
 ```
-
-### JSON Output Format (Python → AI)
-
-```json
-{
-  "status": "SUCCESS",
-  "source": "Finviz",
-  "url": "https://finviz.com/news.ashx",
-  "access_time": "2026-08-31T13:13:12Z",
-  "total_fetched": 87,
-  "after_dedup": 72,
-  "delivered": 50,
-  "items": [
-    {
-      "id": 1,
-      "title": "Stock indexes set to retreat as Brent oil tops $90 a barrel",
-      "summary": "Stock indexes set to retreat as Brent oil tops $90 a barrel with U.S. and Iran resuming strikes...",
-      "url": "https://...",
-      "source": "Finviz",
-      "timestamp": "2026-08-31T09:05:00Z",
-      "raw_text": "Stock indexes set to retreat as Brent oil tops $90 a barrel..."
-    }
-  ]
-}
-```
-
-### Python Error Output
-
-If the source cannot be accessed, Python returns one of two statuses:
-
-**Fallback needed** (Python fetch failed — AI should try web_search):
-
-```json
-{
-  "status": "FALLBACK_NEEDED",
-  "reason": "PYTHON FETCH FAILED",
-  "source": "Finviz",
-  "url": "https://finviz.com/news.ashx",
-  "error": "HTTP 403 Forbidden",
-  "items": []
-}
-```
-
-**Blocked** (both Python AND AI web_search failed):
-
-```json
-{
-  "status": "BLOCKED",
-  "reason": "SOURCE COULD NOT BE ACCESSED",
-  "source": "Finviz",
-  "url": "https://finviz.com/news.ashx",
-  "items": []
-}
-```
-
-### Python Rules
-
-| Rule | Detail |
-|------|--------|
-| Maximum items delivered | 50 |
-| Minimum items delivered | Whatever is available (even 1) |
-| Deduplication | Exact match only (same title + same URL) |
-| Sorting | Newest first by timestamp |
-| Filtering | NONE — Python does not filter |
-| Scoring | NONE — Python does not score |
-| Ticker extraction | NONE — Python does not extract tickers |
-| Company identification | NONE — Python does not identify companies |
-| Noise removal | NONE — Python does not remove noise |
 
 ### Source Library Map (Verified Free Sources)
 
@@ -361,7 +306,7 @@ All sources below are **FREE and accessible** (verified by testing). The user se
 
 | Source | Python Library | Install Command | Access Method | Notes |
 |--------|---------------|-----------------|---------------|-------|
-| **Finviz** | `finvizfinance` | `pip install finvizfinance` | Scrape (HTML) | **DEFAULT SOURCE.** Most complete: news, screener, quotes. 32KB+ content. No API key needed. |
+| **Finviz** | `finvizfinance` | `pip install finvizfinance` | Scrape (HTML) | **DEFAULT SOURCE.** Most complete: news, screener, quotes. No API key needed. |
 
 #### Tier 2 — Optional Alternatives (Free)
 
@@ -385,7 +330,7 @@ All sources below are **FREE and accessible** (verified by testing). The user se
 | RSS feed URL (user-provided) | `feedparser` | If URL ends in `.xml` or `/feed`, use feedparser. |
 | Other platform name | `requests` + `BeautifulSoup4` | Try generic scrape first. If blocked, fallback to web_search. |
 
-#### Sources That Are BLOCKED (Do NOT use Python for these — use web_search fallback directly)
+#### Sources That Are BLOCKED (use web_search fallback directly)
 
 | Source | Reason |
 |--------|--------|
@@ -398,15 +343,22 @@ All sources below are **FREE and accessible** (verified by testing). The user se
 | WSJ | Paywall |
 | MarketWatch | Minimal content returned |
 
-> **If the user selects one of these blocked sources**, Python should skip directly to the FALLBACK step (AI web_search), because Python fetch will fail. The AI should inform the user that the source is blocked and proceed with web_search fallback.
+> **If the user selects one of these blocked sources**, Python skips directly to the AI web_search fallback, because Python fetch will fail. The AI informs the user the source is blocked and proceeds with web_search.
 
----
+### Python Rules
 
-## Phase 1 — Scanner (AI Trader-Reader)
-
-### Phase 1 Concept
-
-The AI is an experienced trader reading a newspaper. Python is the delivery system — it collects up to 50 news items and hands them to the AI. The AI reads everything, filters noise, identifies opportunities, and adapts to the user's trader profile.
+| Rule | Detail |
+|------|--------|
+| Maximum items prepared | 50 |
+| Minimum items | Whatever is available (even 1) |
+| Deduplication | Exact + near-duplicate removal, max 3 per topic |
+| Sorting | Newest first by timestamp |
+| Filtering | NONE — Python does not filter |
+| Scoring | NONE — Python does not score |
+| Ticker extraction | NONE — Python does not extract tickers |
+| Company identification | NONE — Python does not identify companies |
+| Noise removal | NONE — Python does not remove noise |
+| Judgement | NONE — Python never judges; the AI judges |
 
 ### Phase 1 Steps
 
@@ -426,7 +378,7 @@ SOURCE PRIORITY:
 - All sources are equally valid — the user may pick any.
 
 If the user selects a named source from the list above:
-- Record the source name and proceed to Pre-Phase 1 (Python).
+- Record the source name.
 - Python uses the corresponding library from the Source Library Map.
 
 If the user selects "Other" or provides a custom source:
@@ -436,7 +388,7 @@ If the user selects "Other" or provides a custom source:
 - Record the source name and URL (if provided).
 - If the source is a known BLOCKED source (CNBC, Reuters, Bloomberg, etc.):
   Inform the user: "This source may be blocked for direct access. Python will try, and if it fails, AI will use web_search as fallback."
-- Proceed to Pre-Phase 1 (Python) with that source.
+- Proceed to Python fetch with that source.
 
 If the user does not choose any source, USE FINVIZ AS DEFAULT.
 
@@ -447,8 +399,8 @@ Record the selection as: `news_source`
 The framework uses a 3-layer hybrid approach:
 
 LAYER 1 — PYTHON FETCH (Primary)
-  Python uses the Source Library Map to fetch news.
-  If fetch succeeds → deliver JSON to AI → proceed to Step 1B.
+  Python uses the Source Library Map to fetch and stream news to the AI.
+  If fetch succeeds → AI reads items live → proceed to Step 1B.
 
 LAYER 2 — AI WEB_SEARCH (Fallback)
   If Python fetch fails (HTTP 403, timeout, empty, parse error):
@@ -457,10 +409,8 @@ LAYER 2 — AI WEB_SEARCH (Fallback)
     "{source name} financial news today {date}"
   or if source is generic:
     "financial market news today {date}"
-  The AI collects up to 50 items from search results.
-  Each search result becomes a JSON item with:
-    title, summary (snippet), url, source, timestamp (if available), raw_text (snippet)
-  The AI formats these into the same JSON structure and proceeds to Step 1B.
+  The AI collects up to 50 items from search results and reads them with
+  its trader lens, same as if Python had fetched them.
 
 LAYER 3 — BLOCKED (Final)
   If BOTH Python fetch AND AI web_search fail:
@@ -476,33 +426,16 @@ RULES:
   unless the source is in the known BLOCKED list.
 - The AI must NOT fabricate news from training knowledge under any circumstance.
 
-**Pre-Phase 1 Trigger — Python News Collection**
+**Step 1B — Python-Assisted Read (AI as Trader-Reader, LIVE, ONE PASS)**
 
-After Step 1A (source selected), Python fetches, deduplicates, sorts, and caps at 50 items. Python delivers a JSON array to the AI.
+Python brings the AI directly to the selected source and streams each news item. The AI reads each item live, applies the trader profile, and judges it immediately — there is NO separate "collect all, then read all" step.
 
-If Python returns status "SUCCESS" with items:
-  Proceed to Step 1B with the delivered items.
-
-If Python returns status "FALLBACK_NEEDED":
-  The AI uses its built-in web_search tool to search for recent
-  financial news from the same source or general market news.
-  The AI collects up to 50 items, formats them into the same JSON
-  structure (title, summary, url, source, timestamp, raw_text),
-  and proceeds to Step 1B.
-  If web_search also returns no usable results → proceed to BLOCKED.
-
-If Python returns status "BLOCKED":
-  Output: `BLOCKED — SOURCE COULD NOT BE ACCESSED`
-  Do not proceed. Do not fabricate a report.
-
-If the selected source is in the known BLOCKED list (CNBC, Reuters, Bloomberg, etc.):
-  Python skips fetch and returns "FALLBACK_NEEDED" immediately.
-  The AI proceeds to web_search fallback.
-
-**Step 1B — Read All Items (AI as Trader-Reader, Profile-Adaptive)**
-
-The AI receives 30-50 news items from Python.
-The AI must read ALL items before any filtering.
+The AI must:
+- Read every item carefully as it is delivered — like an experienced trader reading a newspaper.
+- Understand the context of each item — do NOT just scan for keywords.
+- Ask internally for each item: "What happened? Who is affected? How big is this? Does this fit my trader profile?"
+- Look for company names, ticker symbols, financial figures, dates, and events.
+- Apply the trader profile lens and the market focus.
 
 **CRITICAL — Trader Profile Adaptation:**
 
@@ -518,22 +451,19 @@ The AI adapts its READING STYLE and OPPORTUNITY RECOGNITION based on the user's 
 The AI does NOT tell the user "I am reading as a [profile]." The adaptation is internal.
 
 Reading rules:
-- The AI reads as a HUMAN READER, not as a keyword-matching script
-- The AI understands business context: M&A, earnings, regulatory changes, geopolitical events, product launches, analyst ratings, sector shifts
-- The AI distinguishes between: major market-moving news vs minor updates vs general commentary
-- The AI pays attention to the user's `market` selection — if market is "US", prioritize US-listed companies
+- The AI reads as a HUMAN READER, not as a keyword-matching script.
+- The AI understands business context: M&A, earnings, regulatory changes, geopolitical events, product launches, analyst ratings, sector shifts.
+- The AI distinguishes between: major market-moving news vs minor updates vs general commentary.
+- The AI pays attention to the user's `market` selection — if market is "US", prioritize US-listed companies.
 
 Source Access Rule:
 
-If Python returns SUCCESS with items → proceed to read.
+If Python fetch succeeds (Layer 1) → read items live.
 
-If Python returns FALLBACK_NEEDED:
-  The AI uses web_search to collect up to 50 items from search results.
-  Format each search result into the JSON structure (title, summary/snippet,
-  url, source, timestamp if available, raw_text/snippet).
-  Proceed to read the collected items.
+If Python returns FALLBACK_NEEDED (Layer 2) →
+  The AI uses web_search to collect up to 50 items, formats them, and reads them.
 
-If both Python AND web_search fail (BLOCKED):
+If both Python AND web_search fail (BLOCKED, Layer 3):
 
 `BLOCKED — SOURCE COULD NOT BE ACCESSED`
 
@@ -542,7 +472,7 @@ Do not use training knowledge as a substitute for reading the actual source.
 
 **Step 1C — Filter By Trader Profile**
 
-After reading all items, the AI filters based on the user's `trader_profile`.
+After reading each item, the AI filters based on the user's `trader_profile`.
 
 Profile definitions:
 
@@ -572,6 +502,7 @@ For each news item that passed the profile filter, the AI extracts and assesses:
 - How significant is this news for this specific company?
 - Does this news create a trading opportunity for the user's trader profile?
 - What is the transmission mechanism?
+- **Is the direction POSITIVE?** If negative, mixed, or neutral → discard (positive-only scan).
 
 **Fact Classification (MANDATORY):**
 - **FACT** — directly supported by the source content
@@ -580,11 +511,11 @@ For each news item that passed the profile filter, the AI extracts and assesses:
 
 Do NOT mix categories. Every claim must be labelled.
 
-**Step 1E — Map Opportunity**
+**Step 1E — Map Opportunity (POSITIVE ONLY)**
 
-For each surviving candidate:
+For each surviving candidate, the AI maps:
 
-**Direction:** Positive / Negative / Mixed / Neutral
+**Direction:** **Positive** (positive only — negative, mixed, and neutral are discarded)
 
 **Transmission Channel:**
 ```text
@@ -617,6 +548,7 @@ Every candidate must pass ALL checks:
 
 | Check | Rule | If Failed |
 |-------|------|-----------|
+| Direction Positive | Must be Positive (not negative/mixed/neutral) | NOISE — discard |
 | Ticker / Company | Must have a real public company ticker | NOISE — discard |
 | Market relevant | Must match user's `market` selection | NOISE — discard |
 | Materiality >= 3 | Score 1-5, minimum 3 | NOISE — discard |
@@ -624,27 +556,29 @@ Every candidate must pass ALL checks:
 | Horizon Fit != Poor | Must be Strong or Partial | NOISE — discard |
 
 **Noise handling rules:**
-- Items that fail ANY check are NOISE
-- NOISE items are DISCARDED — do not include in report
-- Report header shows "Filtered as noise: [K]"
-- Do not explain why individual items were filtered
+- Items that fail ANY check are NOISE.
+- NOISE items are DISCARDED — do not include in report.
+- Report header shows "Filtered as noise: [K]".
+- Do not explain why individual items were filtered.
 
-**Maximum opportunities: 10**
+**Best 7 positive opportunities:**
 
-If more than 10 pass, rank by:
+If more than 7 positive opportunities pass the Noise Gate, rank by:
 1. Materiality (highest first)
 2. Confidence (highest first)
 3. Horizon Fit (Strong > Partial)
 4. Catalyst clarity
+5. News strength (most recent/fresh first)
 
-Take top 10. Discard the rest.
+Take the top 7. Discard the rest.
 
 **Leftover handling — MANDATORY:**
-- If AI finds 10 qualifying -> output 10 cards, discard ALL remaining
-- If AI finds 7 qualifying -> output 7 cards, discard ALL remaining
-- If AI finds 3 qualifying -> output 3 cards, discard ALL remaining
-- If AI finds 0 qualifying -> output "No qualifying opportunities found"
+- If AI finds 7 qualifying -> output 7 cards, discard ALL remaining.
+- If AI finds 5 qualifying -> output 5 cards, discard ALL remaining.
+- If AI finds 1 qualifying -> output 1 card, discard ALL remaining.
+- If AI finds 0 qualifying -> output "No qualifying positive opportunities found".
 - ALL leftover items are DISCARDED. No second pass. No re-reading.
+- The AI does NOT force-fill to reach 7. If only 3 positive qualify, output 3. That is complete.
 
 ### Phase 1 Output — LOCKED TEMPLATE
 
@@ -661,7 +595,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 | Field | Value |
 |-------|-------|
 | Company | [COMPANY NAME] |
-| Direction | **Positive** / Negative / Mixed / Neutral |
+| Direction | **Positive** |
 | Materiality | ★★★☆☆ (X/5) |
 | Confidence | HIGH / MEDIUM / LOW |
 | Horizon Fit | Strong / Partial / Poor |
@@ -687,7 +621,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 | Field | Value |
 |-------|-------|
 | Company | [COMPANY NAME] |
-| Direction | **Positive** / Negative / Mixed / Neutral |
+| Direction | **Positive** |
 | Materiality | ★★★☆☆ (X/5) |
 | Confidence | HIGH / MEDIUM / LOW |
 | Horizon Fit | Strong / Partial / Poor |
@@ -708,7 +642,7 @@ Items scanned: [N] | Material calls: [M] | Filtered as noise: [K]
 
 ---
 
-[... repeat for each qualifying opportunity, maximum 10 cards ...]
+[... repeat for each qualifying opportunity, maximum 7 positive cards ...]
 
 ---
 
