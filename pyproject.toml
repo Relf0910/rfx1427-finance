@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rfx1427-finance-phase1"
+version = "4.5.0"
+description = "Python source fetch layer for RFX1427 Finance Phase 1"
+requires-python = ">=3.10"
+dependencies = [
+  "requests>=2.31,<3",
+  "beautifulsoup4>=4.12,<5",
+  "feedparser>=6.0,<7",
+  "yfinance>=0.2,<1",
+]
+
+[project.scripts]
+rfx1427-phase1 = "rfx1427.phase1:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
