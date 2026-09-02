@@ -176,15 +176,28 @@ END
 
 Ask ONE at a time.
 
-**Q1:** "What language for output?"
+### Intake Presentation Mode — ADAPTIVE (no content change)
+
+Present each intake question using the platform's native choice/option UI when the
+platform provides one (e.g. selectable buttons, arrow-key + Enter menus, option panels).
+This lets the user answer with the arrow keys and Enter instead of typing manually.
+
+- IF the current AI platform supports an interactive choice/option UI → render Q1/Q2/Q3
+  as native selectable choices (arrow keys + Enter). Ask one question at a time.
+- IF the platform does NOT provide such a UI → fall back to the manual text prompts below
+  (list options as `[English] [Bahasa Melayu] [Other]` and let the user type).
+- The QUESTION CONTENT, OPTIONS, and recorded field names are UNCHANGED in both modes.
+- HARD RULE #1 still applies: ask ONE question at a time in BOTH modes.
+
+**Q1:** "What language for output?" — (adaptive: use native choice UI if available, else type)
 - [English] [Bahasa Melayu] [Other]
 - → record: `output_language`
 
-**Q2:** "What trader profile?"
+**Q2:** "What trader profile?" — (adaptive: use native choice UI if available, else type)
 - [Scalper] [Intraday] [Swing] [Investor]
 - → record: `trader_profile`
 
-**Q3:** "What market focus?"
+**Q3:** "What market focus?" — (adaptive: use native choice UI if available, else type)
 - [US] [Singapore] [Malaysia] [Other]
 - → record: `market`
 
