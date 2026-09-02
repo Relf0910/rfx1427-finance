@@ -6,6 +6,12 @@ Source: Framework v3.1
 
 Intake has **3 questions only**. Ask **one at a time** — do not ask all at once (Rule 1). If any field is incomplete, **WAIT** (Rule 2).
 
+## Presentation Mode (Adaptive)
+
+Render each question using the platform's native choice UI when available (arrow keys +
+Enter), else fall back to the manual text options. Question content, options, and recorded
+field names are identical in both modes. Ask ONE question at a time (Rule 1) in both modes.
+
 ## Q1 — Output Language
 
 Ask:
