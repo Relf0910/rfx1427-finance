@@ -1,14 +1,21 @@
 # Phase 1 — Scanner
 
-Source: Framework v3.1
+Source: Framework v4.3
 
 ## Overview
 
-Phase 1 reads ONE news source selected by user, filters public companies by trader profile, and extracts qualifying opportunities through the Noise Gate.
+Phase 1 is a **Python + AI unified flow**. Python brings the AI directly to the selected news source and assists reading in real time. The AI reads each item with a trader-profile lens, filters by trader profile and market focus, applies a **positive-only** scan, and outputs the **best 7 positive opportunities** through the Noise Gate — in one single pass.
 
 **Default Source: Finviz** — If user does not choose, use Finviz.
 
 ## 6 Steps: `1A → 1B → 1C → 1D → 1E → 1F`
+
+## Python + AI Division of Work
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Fetch/stream the source, format each item, assist search fallback. Python does NOT filter, score, or judge. |
+| **AI** | Reads each item, applies trader profile, identifies tickers, judges direction (positive-only), filters noise, ranks, outputs the best 7 positive cards. |
 
 ## STEP 1A — News Source
 
@@ -17,33 +24,59 @@ Ask:
 > "What news source for today?"
 
 Options:
-- [Finviz (Default)] [Reuters] [CNBC] [Bloomberg] [Other]
+- [Finviz (Default)] [Yahoo Finance] [Investing.com] [TradingView]
+- [StockTitan] [PR Newswire] [GlobeNewswire] [Motley Fool]
+- [Barchart] [StockAnalysis.com] [Other]
+
+SOURCE PRIORITY:
+- Finviz is the DEFAULT and PRIMARY source.
+- All other listed sources are FREE alternatives (see Source Library Map in SKILL.md).
+- The user may pick any source.
 
 → If user does not choose, USE FINVIZ AS DEFAULT.
 
+If user selects "Other" or a custom source:
+- Accept ANY source (URL, platform name, website, RSS feed, document).
+- Do not reject or judge the source.
+- If the source is a known BLOCKED source (CNBC, Reuters, Bloomberg, etc.), inform the user that Python will try and fall back to web_search if it fails.
+
 Record as: `news_source`
 
-## STEP 1B — Fetch / Read Source
+## STEP 1B — Python-Assisted Read (ONE PASS, 3-Layer Hybrid Fallback)
 
-Use selected `news_source`.
+Python brings the AI directly to the selected source and streams each news item. The AI reads each item live with its trader lens — there is NO separate collect-then-read step.
+
+Plain: LAYER 1 (Python fetch) → LAYER 2 (AI web_search) → LAYER 3 (BLOCKED).
 
 Required:
-1. Access source
-2. Record URL if available
-3. Record access time
-4. Read accessible relevant content
-5. Apply market focus filter
-6. Continue to Step 1C
+1. Python accesses source using Source Library Map library (Layer 1)
+2. If Python fails → AI uses web_search fallback (Layer 2)
+3. If both fail → BLOCKED (Layer 3)
+4. Record URL if available
+5. Record access time
+6. Read each item live, apply trader-profile + market focus
+7. Discard negative/mixed/neutral + noise immediately
+8. Continue to Step 1C
 
 ### Source Access Rule
 
-If source fails to access:
+If both Python fetch AND AI web_search fail:
 
 ```text
 BLOCKED — SOURCE COULD NOT BE ACCESSED
 ```
 
-Do not claim source was read. Do not generate fabricated scanner report.
+Do not claim source was read. Do not generate fabricated scanner report. Do not use training knowledge as a substitute.
+
+### Fallback Architecture
+
+```text
+LAYER 1 — PYTHON FETCH (Primary): use Source Library Map library.
+  Success → stream items to AI → AI reads live.
+LAYER 2 — AI WEB_SEARCH (Fallback): if Python fails (FALLBACK_NEEDED),
+  AI uses web_search to collect up to 50 items and reads them with its trader lens.
+LAYER 3 — BLOCKED (Final): only when both layers fail.
+```
 
 ## STEP 1C — Filter By Trader Profile
 
@@ -88,15 +121,13 @@ Distinguish three categories:
 
 Do not mix categories.
 
-## STEP 1E — Map Opportunity
+## STEP 1E — Map Opportunity (POSITIVE ONLY)
 
 For each candidate:
 
 ### Direction
-- Positive
-- Negative
-- Mixed
-- Neutral
+- **Positive** (only positive is reported)
+- Negative / Mixed / Neutral → discarded (positive-only scan)
 
 ### Transmission Channel
 ```text
@@ -135,6 +166,7 @@ POTENTIAL PRICE IMPACT
 Candidate MUST pass ALL:
 
 ```text
+Direction Positive (not negative/mixed/neutral)
 Materiality >= 3
 Confidence >= Medium
 Horizon Fit != Poor
@@ -142,7 +174,7 @@ Identifiable ticker/company
 Market focus relevant
 ```
 
-Maximum: **7 opportunities**
+Maximum: **7 positive opportunities**
 
 ### Ranking
 
@@ -152,8 +184,9 @@ If more than 7:
 2. Confidence (descending)
 3. Horizon Fit (Strong > Partial)
 4. Catalyst clarity
+5. News strength (most recent/fresh first)
 
-Take maximum 7.
+Take the best 7 positive. Discard the rest. No second pass, no re-reading, no force-fill.
 
 ---
 
@@ -170,7 +203,7 @@ Akses: [DATE TIME]
 Items scanned: N | Material calls: M | Filtered as noise: K
 ```
 
-Then for every qualifying opportunity (maximum 7), output a card in this exact structure:
+Then for every qualifying opportunity (maximum 7 positive), output a card in this exact structure:
 
 ```markdown
 ## CARD [#N] — [TICKER]
@@ -178,7 +211,7 @@ Then for every qualifying opportunity (maximum 7), output a card in this exact s
 | Field | Value |
 |-------|-------|
 | Company | [COMPANY NAME] |
-| Direction | **Positive** / Negative / Mixed / Neutral |
+| Direction | **Positive** |
 | Materiality | ★★★☆☆ (X/5) |
 | Confidence | HIGH / MEDIUM / LOW |
 | Horizon Fit | Strong / Partial / Poor |

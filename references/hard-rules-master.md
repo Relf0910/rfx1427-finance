@@ -18,7 +18,7 @@ Sumber: framework v2.2, Seksyen 13.
 9. Materiality must be ≥3.
 10. Confidence must be ≥Medium.
 11. Horizon must fit.
-12. Maximum 7 opportunities.
+12. Maximum 7 opportunities, positive only.
 13. Report only after filtering.
 14. Stop after report.
 

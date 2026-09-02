@@ -1,10 +1,10 @@
-# Phase 3 — SEC EDGAR Verification (Opt-in Only)
+# Phase 3 — SEC EDGAR Verification (Python + AI Unified, Opt-in Only)
 
-Source: Framework v3.1
+Source: Framework v4.5
 
 ## Overview
 
-Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification.
+Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification. Python works directly with the AI: Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and labels VERIFIED / UNVERIFIED. No collect-then-read two-pass.
 
 **IMPORTANT: Phase 3 is SEPARATE from Phase 2. Phase 2 does NOT include SEC.**
 
@@ -14,6 +14,14 @@ Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR veri
 2. **If still fails** → label `UNVERIFIED — SEC DATA NOT AVAILABLE`
 3. Do NOT fabricate data
 4. **No auto-proceed** — ask user at every step
+5. **Python fetches + parses; AI verifies + labels** — Python does NOT judge
+
+## Python + AI Division of Work (Phase 3)
+
+| Layer | What it does |
+|-------|--------------|
+| **Python** | Access SEC EDGAR, fetch + parse official filings per ticker, prepare key items. Python does NOT verify or label. |
+| **AI** | Reads each filing, compares against Phase 2 claims, assigns VERIFIED / UNVERIFIED label, links back to the catalyst. |
 
 ## When Phase 3 is Triggered
 
@@ -31,9 +39,21 @@ Options:
 - [Skip — Continue to Phase 4] → Proceed to Phase 4
 - [Skip] → END
 
-## STEP 3A — Fetch SEC EDGAR Data
+## STEP 3A — Python-Assisted SEC Fetch
 
-For each ticker from Phase 1, access SEC EDGAR (sec.gov/edgar)
+For each ticker from Phase 1, Python accesses SEC EDGAR (sec.gov/edgar), fetches and parses official filings. Python prepares; AI judges.
+
+```text
+STEP S1 — SEC ACCESS (Python fetches)
+  - Access SEC EDGAR via its official API/library.
+  - Fetch filings: 10-K, 10-Q, 8-K, 6-K, Form 4.
+STEP S2 — PARSE KEY ITEMS (Python prepares)
+  - Extract: Revenue, Net Income / EPS, Total Debt, Cash Flow,
+    Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K).
+STEP S3 — VERIFY (AI judges)
+  - AI compares the filing against Phase 2 claims.
+  - AI assigns VERIFIED or UNVERIFIED.
+```
 
 ### Filing Types to Check
 
@@ -61,9 +81,30 @@ UNVERIFIED — SPECIFIC DATA NOT AVAILABLE
 
 Do NOT fabricate. Do NOT claim filing was read if it was not.
 
-## STEP 3B — Label Verification Results
+### Python Failure — Layered Fallback (Phase 3)
 
-For each ticker:
+If Python SEC access fails, use the layered fallback. Python ALWAYS tries the primary SEC access first; the label is ONLY declared when both methods fail. Fallback is NOT web_search — SEC verification must come from official SEC sources.
+
+```text
+LAYER 1 — PYTHON SEC FETCH (Primary)   -> if success, parse (STEP S2)
+LAYER 2 — ALTERNATE SEC METHOD (Fallback) -> if Python fails, try an alternate
+                                             SEC access (sec-api / EDGAR full-text
+                                             search API / another SEC library).
+                                             If success, parse (STEP S2).
+LAYER 3 — LABEL (Final)                -> if both fail, AI applies:
+                                             BLOCKED — SEC EDGAR COULD NOT BE ACCESSED
+                                             then -> UNVERIFIED — SEC DATA NOT AVAILABLE
+```
+
+Rules:
+- Python ALWAYS tries the primary SEC access first (Layer 1).
+- Layer 2 (alternate SEC method) is ONLY used when Python fails.
+- The label is ONLY declared when both layers fail (Layer 3).
+- Python does NOT verify or label; the AI applies the label.
+
+## STEP 3B — Label Verification Results (AI judges)
+
+Python delivers the parsed filings; the AI compares against Phase 2 and assigns the label. For each ticker:
 
 | Status | Meaning |
 | --- | --- |
