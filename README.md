@@ -98,7 +98,7 @@ GATE 0 — INTAKE
        │
        ▼
 PHASE 1 — MARKET SCANNER
-  Python source fetch → AI reads and filters → Best 7 positive opportunities
+  Python source fetch → AI reads staged pool 50→70→100 (early-stop) → Best 7–10 positive opportunities (WAJIB 7 target 10)
        │
        ▼
 STOP — WAIT FOR USER
