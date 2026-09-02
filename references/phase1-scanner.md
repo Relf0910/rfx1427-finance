@@ -1,10 +1,10 @@
 # Phase 1 — Scanner
 
-Source: Framework v4.6
+Source: Framework v4.7
 
 ## Overview
 
-Phase 1 is a **Python + AI unified flow**. Python brings the AI directly to the selected news source and assists reading in real time. The AI reads each item with a trader-profile lens, filters by trader profile and market focus, applies a **positive-only** scan, and outputs **exactly 7 positive opportunities — WAJIB 7, profile-adaptive** through the Noise Gate — in one single pass. Scan counts are internal and never disclosed. Python auto-expands the fetch window (up to 100 items + pagination + alternate source + Layer 2 web_search) until 7 are assembled.
+Phase 1 is a **Python + AI unified flow**. Python brings the AI directly to the selected news source and assists reading in real time. The AI reads each item with a trader-profile lens, filters by trader profile and market focus, applies a **positive-only** scan, and outputs **7–10 positive opportunities — WAJIB 7 target 10, profile-adaptive** through the Noise Gate — in staged early-stop windows 50→70→100. Scan counts are internal and never disclosed. If pool has 7–10 at 70, Python stops early (skip 71–100); if 8/9 at 100, also stop.
 
 **Default Source: Finviz** — If user does not choose, use Finviz.
 
@@ -15,7 +15,7 @@ Phase 1 is a **Python + AI unified flow**. Python brings the AI directly to the 
 | Layer | What it does |
 |-------|--------------|
 | **Python** | Fetch/stream the source, format each item, assist search fallback. Python does NOT filter, score, or judge. |
-| **AI** | Reads each item, applies trader profile, identifies tickers, judges direction (positive-only), filters noise, ranks, outputs the best 7 positive cards. |
+| **AI** | Reads each item, applies trader profile, identifies tickers, judges direction (positive-only), filters noise, ranks, outputs 7–10 positive cards (WAJIB 7 target 10) staged 50→70→100 with early-stop. |
 
 ## STEP 1A — News Source
 
@@ -68,19 +68,21 @@ BLOCKED — SOURCE COULD NOT BE ACCESSED
 
 Do not claim source was read. Do not generate fabricated scanner report. Do not use training knowledge as a substitute.
 
-### Fallback Architecture (v4.6 — refill to Exactly 7)
+### Fallback Architecture (v4.7 — WAJIB 7 target 10, staged 50→70→100 early-stop)
 
 ```text
-LAYER 1 — PYTHON FETCH (Primary): use Source Library Map library (up to 100 items).
-  Success → stream items to AI → AI reads live → if <7 qualifying, Python auto-expands
-  (next page / next source e.g. StockTitan) before invoking Layer 2.
-LAYER 2 — AI WEB_SEARCH (Fallback + Refill): if Python fails (FALLBACK_NEEDED) OR if <7
-  qualifying after Layer 1, AI uses web_search to collect up to 50 additional items to
-  refill toward exactly 7. AI reads refilled items with trader lens, re-applies Noise Gate
-  + profile-adaptive ranking until 7 are assembled. Scan counts are internal, never disclosed.
+LAYER 1 — PYTHON FETCH (Primary, staged 50→70→100):
+  Stage 1: fetch 1→50, stream to AI. If pool ≥7, continue toward target 10 (do not stop at 50).
+  Stage 2: fetch 51→70; if pool has 7–10 qualifying at 70 → STOP early, skip 71→100.
+  Stage 3: fetch 71→100 only if pool <7 at 70. If pool has 8/9 at 100 → STOP and output 8/9.
+  If pool still <7 after staged 100, Python auto-expands pagination/alternate source
+  (e.g. StockTitan) before invoking Layer 2.
+LAYER 2 — AI WEB_SEARCH (Fallback + Refill): if Python fails (FALLBACK_NEEDED) OR if pool
+  still <7 after staged Layer 1, AI uses web_search to collect up to 50 additional items to
+  refill toward WAJIB 7 target 10 (output 7–10). Scan counts internal, never disclosed.
 LAYER 3 — BLOCKED (Final): only when all layers exhausted.
-  Fail-safe (<7 even after all layers): output what exists with disclaimer and documented
-  blocker; do NOT fabricate, do NOT lower thresholds.
+  Fail-safe (<7 even after all layers): output X with disclaimer and documented blocker;
+  do NOT fabricate, do NOT lower thresholds.
 ```
 
 ## STEP 1C — Filter By Trader Profile
@@ -179,7 +181,7 @@ Identifiable ticker/company
 Market focus relevant
 ```
 
-Exactly: **7 positive opportunities — WAJIB 7 (Profile-Adaptive)**
+WAJIB 7, target 10 (output 7–10) — staged 50→70→100 with early-stop (Profile-Adaptive)
 
 ### Ranking (Profile-Adaptive)
 
@@ -198,15 +200,17 @@ Profile weighting (applied on top of base order):
 | SWING | Days → Weeks | Guidance / sector rotation / short-interest / product catalyst = bonus; freshness moderate |
 | INVESTOR | Long-term | Structural / M&A / 10-K / 10-Q / moat > freshness; structural catalyst = bonus even if older |
 
-Procedure:
-- If ≥7 qualifying after first fetch → rank profile-adaptively → take top 7 → output exactly 7.
-- If <7 qualifying → Python auto-expands fetch window (next page / next source + Layer 2 web_search) without asking the user, re-applies hard gates + profile-adaptive ranking, until 7 are assembled. Thresholds are never lowered; fabrication is never allowed.
+Staged procedure (early-stop):
+- Stage 1 — Read 1→50: collect qualifying pool. If pool ≥7, continue expanding toward target 10 (do not stop at 50).
+- Stage 2 — Read 51→70: if pool has 7–10 qualifying at 70 → STOP early (skip 71→100), rank pool profile-adaptively, output 7–10 best (cap 10).
+- Stage 3 — Read 71→100: only if pool <7 at 70. If pool has 8/9 at 100 → STOP and output 8/9. If pool <7 even after 100 + pagination/alternate source + Layer 2 web_search → fail-safe.
+- Thresholds never lowered; fabrication never allowed. Discard leftovers beyond output pool.
 
 ### Leftover / Fail-Safe
 
-- If 7 qualifying assembled → output exactly 7 cards, discard ALL remaining.
-- If after exhausting all layers (100 items + pagination + alternate source + Layer 2 web_search) still <7 qualifying → fail-safe: output what exists (X cards) with explicit disclaimer: "Hanya X peluang memenuhi gate daripada semua sumber — tidak dapat capai 7 tanpa melanggar hard gate." Document the blocker; do NOT fabricate, do NOT lower thresholds. This is the only exception to the 7-card rule.
-- ALL leftover items beyond the 7 (or beyond X in fail-safe) are DISCARDED. No re-reading.
+- If pool has 7–10 qualifying at checkpoint (70 or 100) → output 7–10 cards (cap 10), discard ALL remaining. No second pass.
+- If after exhausting all layers (staged 100 + pagination + alternate source + Layer 2 web_search) still <7 qualifying → fail-safe: output what exists (X cards) with explicit disclaimer: "Hanya X peluang memenuhi gate daripada semua sumber — tidak dapat capai 7 tanpa melanggar hard gate." Document the blocker; do NOT fabricate, do NOT lower thresholds. This is the only exception to the WAJIB 7 rule.
+- ALL leftover items beyond the output pool (or beyond X in fail-safe) are DISCARDED. No re-reading.
 
 ---
 
@@ -214,7 +218,7 @@ Procedure:
 
 **THIS FORMAT IS LOCKED. STRICTLY FOLLOW. DO NOT MODIFY.**
 
-Output must begin with (v4.6 — no scan counts):
+Output must begin with (v4.7 — no scan counts):
 
 ```markdown
 # MARKET SCANNER — [DATE] | Source: [SOURCE]
@@ -222,7 +226,7 @@ Output must begin with (v4.6 — no scan counts):
 Akses: [DATE TIME]
 ```
 
-Then output exactly 7 positive cards (profile-adaptively ranked), each in this exact structure:
+Then output 7–10 positive cards (WAJIB 7 target 10, profile-adaptively ranked, staged 50→70→100 early-stop), each in this exact structure:
 
 ```markdown
 ## CARD [#N] — [TICKER]
@@ -251,12 +255,12 @@ Then output exactly 7 positive cards (profile-adaptively ranked), each in this e
 
 ---
 
-[... repeat for CARD [#2] through CARD [#7] — exactly 7 positive cards, profile-adaptively ranked ...]
+[... repeat for CARD [#2] through CARD [#7] — up to CARD [#10] if pool qualifies — 7–10 positive cards, profile-adaptively ranked ...]
 
 ---
 ```
 
-After the last card (CARD [#7]), output exactly:
+After the last card (CARD [#7] or up to [#10] if expanded), output exactly:
 
 ```text
 STOP

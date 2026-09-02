@@ -16,7 +16,16 @@ from bs4 import BeautifulSoup
 from rfx1427.models import FetchResult, FetchStatus, NewsItem, utc_now
 
 
-USER_AGENT = "rfx1427-finance/4.6 (news research; contact repository owner)"
+USER_AGENT = "rfx1427-finance/4.7 (news research; contact repository owner)"
+
+
+# v4.7 staged fetch constants — WAJIB 7 target 10, early-stop 50→70→100.
+# Python fetches; AI judges pool and decides early-stop.
+STAGE_1_LIMIT = 50  # Stage 1: 1→50
+STAGE_2_LIMIT = 70  # Stage 2: 51→70 (early-stop checkpoint if pool 7–10)
+STAGE_3_LIMIT = 100  # Stage 3: 71→100 (final; 8/9 also stop)
+POOL_MIN = 7       # WAJIB 7
+POOL_TARGET = 10   # target 10 (output 7–10)
 
 
 class SourceError(RuntimeError):

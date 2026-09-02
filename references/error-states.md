@@ -1,6 +1,6 @@
 # Error States
 
-Source: Framework v4.6
+Source: Framework v4.7
 
 ## SOURCE ERROR
 
@@ -88,9 +88,9 @@ Used when: Final confidence gate evaluates to Low. Opportunity excluded from rep
 No qualifying opportunities found for this trader profile and market focus.
 ```
 
-Used when: No opportunity passes Noise Gate in Phase 1 (fail-safe only when <7 even after full refill).
+Used when: No opportunity passes Noise Gate in Phase 1 (fail-safe only when <7 even after staged 50→70→100 + pagination + alternate source + Layer 2 web_search).
 
-In v4.6, Phase 1 must produce exactly 7 cards; this line is used only as fail-safe when all layers (100 + pagination + alternate source + Layer 2 web_search) still yield 0 qualifying, with disclaimer.
+In v4.7, Phase 1 must produce 7–10 cards (WAJIB 7 target 10, staged 50→70→100 early-stop); this line is used only as fail-safe when all layers (staged 100 + pagination + alternate source + Layer 2 web_search) still yield 0 qualifying, with disclaimer. At 70 if pool 7–10 STOP; at 100 if 8/9 STOP.
 Do NOT fabricate to reach 7; do NOT lower hard-gate thresholds.
 
 ## NO TICKER

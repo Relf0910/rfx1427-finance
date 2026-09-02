@@ -1,6 +1,6 @@
-# Hard Rules Master List (37 — v4.6)
+# Hard Rules Master List (37 — v4.7)
 
-Sumber: framework v4.6.
+Sumber: framework v4.7.
 
 ## Intake
 
@@ -18,7 +18,7 @@ Sumber: framework v4.6.
 9. Materiality must be ≥3.
 10. Confidence must be ≥Medium.
 11. Horizon must fit.
-12. Exactly 7 positive opportunities — WAJIB 7, profile-adaptive. Python expands fetch window (up to 100 + pagination + alternate source + Layer 2 web_search) until 7 are assembled; no scan-count disclosure; fail-safe with disclaimer only if all layers still yield <7.
+12. WAJIB 7 target 10 (output 7–10), staged 50→70→100 with early-stop, profile-adaptive. Stage 1: 1→50 (if ≥7 continue to 10), Stage 2: 51→70 (if 7–10 at 70 STOP), Stage 3: 71→100 (if 8/9 at 100 STOP). Hard gates never lowered; no scan-count disclosure; fail-safe with disclaimer only if all layers still yield <7.
 13. Report only after filtering.
 14. Stop after report.
 
