@@ -16,8 +16,12 @@ from rfx1427.models import FetchResult, FetchStatus
 from rfx1427.sources.registry import build_adapter, supported_sources
 
 
-def run_phase1(source: str, market: str = "US", profile: str = "INTRADAY", limit: int = 50) -> FetchResult:
-    """Fetch and normalize source items. AI remains responsible for all judgment."""
+def run_phase1(source: str, market: str = "US", profile: str = "INTRADAY", limit: int = 100) -> FetchResult:
+    """Fetch and normalize source items. AI remains responsible for all judgment.
+
+    v4.6: limit defaults to 100 and Python auto-expands the window (internal)
+    until 7 qualifying cards can be assembled. Scan counts are never disclosed.
+    """
     try:
         adapter = build_adapter(source)
     except ValueError as exc:
@@ -42,13 +46,13 @@ def main() -> int:
     parser.add_argument("--source", required=True, help="Listed source name or custom URL")
     parser.add_argument("--market", default="US")
     parser.add_argument("--profile", default="INTRADAY", choices=["SCALPER", "INTRADAY", "SWING", "INVESTOR"])
-    parser.add_argument("--limit", type=int, default=50)
+    parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--list-sources", action="store_true")
     args = parser.parse_args()
     if args.list_sources:
         print("\n".join(supported_sources()))
         return 0
-    result = run_phase1(args.source, args.market, args.profile, max(1, min(args.limit, 50)))
+    result = run_phase1(args.source, args.market, args.profile, max(1, min(args.limit, 100)))
     emit_jsonl(result)
     return 0 if result.status == FetchStatus.SUCCESS.value else 2
 

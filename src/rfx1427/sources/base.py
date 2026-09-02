@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 from rfx1427.models import FetchResult, FetchStatus, NewsItem, utc_now
 
 
-USER_AGENT = "rfx1427-finance/4.5 (news research; contact repository owner)"
+USER_AGENT = "rfx1427-finance/4.6 (news research; contact repository owner)"
 
 
 class SourceError(RuntimeError):
@@ -42,7 +42,7 @@ class SourceAdapter(ABC):
     def urls(self, market: str) -> list[str]:
         raise NotImplementedError
 
-    def fetch(self, *, market: str, limit: int = 50) -> FetchResult:
+    def fetch(self, *, market: str, limit: int = 100) -> FetchResult:
         access_time = utc_now()
         try:
             items: list[NewsItem] = []
@@ -235,7 +235,7 @@ def parse_html(body: str, source: str, page_url: str) -> list[NewsItem]:
     return out
 
 
-def normalize_items(items: Iterable[NewsItem], limit: int = 50) -> list[NewsItem]:
+def normalize_items(items: Iterable[NewsItem], limit: int = 100) -> list[NewsItem]:
     seen: set[tuple[str, str]] = set()
     unique: list[NewsItem] = []
     for item in items:
