@@ -12,7 +12,7 @@ SOURCE_URLS: dict[str, list[str]] = {
     "tradingview": ["https://www.tradingview.com/markets/stocks-usa/market-movers-active/"],
     "stocktitan": ["https://www.stocktitan.net/news"],
     "pr newswire": ["https://www.prnewswire.com/news-releases/news-releases-list/"],
-    "globenewswire": ["https://www.globenewswire.com/NewsRoom/News/Category/Financial%20Services"],
+    "globenewswire": ["https://www.globenewswire.com/RssFeed/subjectcode/39"],
     "motley fool": ["https://www.fool.com/investing-news/"],
     "barchart": ["https://www.barchart.com/stocks/news"],
     "stockanalysis.com": ["https://stockanalysis.com/news/"],

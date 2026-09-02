@@ -5,6 +5,13 @@ import json
 import sys
 from typing import Iterable
 
+# Windows consoles often default to cp1252, which cannot encode the full
+# UTF-8 text returned by news sources. Force UTF-8 so output never crashes.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 from rfx1427.models import FetchResult, FetchStatus
 from rfx1427.sources.registry import build_adapter, supported_sources
 

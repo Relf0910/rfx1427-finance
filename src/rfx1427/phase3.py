@@ -122,7 +122,19 @@ class SecClient:
         return rows
 
     @staticmethod
-    def _concept(facts: dict[str, Any], names: tuple[str, ...], forms: tuple[str, ...]) -> FilingFact:
+    def _accession_matches(row_accn: Any, target: str) -> bool:
+        """Match an XBRL accession against a submission accession regardless of dash format."""
+        if not row_accn or not target:
+            return False
+        return str(row_accn) == target or str(row_accn).replace("-", "") == target.replace("-", "")
+
+    @staticmethod
+    def _concept(facts: dict[str, Any], names: tuple[str, ...], forms: tuple[str, ...], accn: str) -> FilingFact:
+        """Return the fact value that belongs to the given accession, not the latest global one.
+
+        Each filing must carry its own numbers; pulling the last matching value from the
+        global facts history mixes periods across filings, so a non-match yields NOT AVAILABLE.
+        """
         usgaap = facts.get("facts", {}).get("us-gaap", {})
         for name in names:
             concept = usgaap.get(name)
@@ -130,8 +142,8 @@ class SecClient:
                 continue
             units = concept.get("units", {})
             for unit, values in units.items():
-                for row in reversed(values):
-                    if row.get("form") in forms:
+                for row in values:
+                    if row.get("form") in forms and SecClient._accession_matches(row.get("accn"), accn):
                         return FilingFact(name, row.get("val", NOT_AVAILABLE), unit, row.get("form", NOT_AVAILABLE),
                                           row.get("filed", NOT_AVAILABLE), row.get("end", NOT_AVAILABLE),
                                           row.get("accn", NOT_AVAILABLE), NOT_AVAILABLE, name)
@@ -153,11 +165,12 @@ class SecClient:
                           "accession_number": row["accessionNumber"], "source_url": source_url,
                           "facts": {}}
                 if row["form"] in {"10-K", "10-Q", "6-K"}:
-                    filing["facts"] = {"revenue": self._concept(facts, ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"), ("10-K", "10-Q", "6-K")).to_dict(),
-                                       "net_income_eps": self._concept(facts, ("EarningsPerShareDiluted", "ProfitLoss"), ("10-K", "10-Q", "6-K")).to_dict(),
-                                       "total_debt": self._concept(facts, ("LongTermDebtAndFinanceLeaseObligationsCurrent", "LongTermDebtNoncurrent"), ("10-K", "10-Q", "6-K")).to_dict(),
-                                       "cash_flow": self._concept(facts, ("NetCashProvidedByUsedInOperatingActivities",), ("10-K", "10-Q", "6-K")).to_dict(),
-                                       "outstanding_shares": self._concept(facts, ("EntityCommonStockSharesOutstanding",), ("10-K", "10-Q", "6-K")).to_dict()}
+                    forms = ("10-K", "10-Q", "6-K")
+                    filing["facts"] = {"revenue": self._concept(facts, ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"), forms, row["accessionNumber"]).to_dict(),
+                                       "net_income_eps": self._concept(facts, ("EarningsPerShareDiluted", "ProfitLoss"), forms, row["accessionNumber"]).to_dict(),
+                                       "total_debt": self._concept(facts, ("LongTermDebtAndFinanceLeaseObligationsCurrent", "LongTermDebtNoncurrent"), forms, row["accessionNumber"]).to_dict(),
+                                       "cash_flow": self._concept(facts, ("NetCashProvidedByUsedInOperatingActivities",), forms, row["accessionNumber"]).to_dict(),
+                                       "outstanding_shares": self._concept(facts, ("EntityCommonStockSharesOutstanding",), forms, row["accessionNumber"]).to_dict()}
                 result.filings.append(filing)
                 if row["form"] == "8-K":
                     result.material_events.append({"form": "8-K", "filing_date": row["filingDate"], "period": row["reportDate"], "source_url": source_url})

@@ -141,11 +141,24 @@ class FinvizAdapter:
             quote = finvizfinance(ticker)
             data = quote.ticker_fundament()
             price = _float(data.get("Price"))
-            return MarketData(ticker=ticker, primary_tool="Finviz", fetch_status="SUCCESS", access_time=utc_now(), price=price,
-                              change_percent=_float(str(data.get("Change", "")).replace("%", "")),
-                              volume=data.get("Volume", NOT_AVAILABLE), technical_levels={"RSI": _float(data.get("RSI", "")), "SMA_20": NOT_AVAILABLE, "SMA_50": NOT_AVAILABLE},
-                              analyst_data={"target": data.get("Target Price", NOT_AVAILABLE), "rating": data.get("Recom", NOT_AVAILABLE)},
-                              earnings={"EPS": data.get("EPS (ttm)", NOT_AVAILABLE), "revenue": data.get("Sales (ttm)", NOT_AVAILABLE)})
+            levels = {
+                "RSI": _float(data.get("RSI", "")),
+                "SMA_20": _float(str(data.get("SMA20", "")).replace("%", "")),
+                "SMA_50": _float(str(data.get("SMA50", "")).replace("%", "")),
+                "52_week_high": _float(str(data.get("52W High", "")).split()[0]),
+                "52_week_low": _float(str(data.get("52W Low", "")).split()[0]),
+            }
+            return MarketData(ticker=ticker, primary_tool="Finviz", fetch_status="SUCCESS", access_time=utc_now(),
+                              company=data.get("Company", NOT_AVAILABLE),
+                              price=price,
+                              change_percent=_float(str(data.get("Change %", "")).replace("%", "")),
+                              volume=data.get("Volume", NOT_AVAILABLE),
+                              technical_levels=levels,
+                              analyst_data={"target": _float(str(data.get("Target Price", "")).split()[0]),
+                                            "rating": data.get("Recom", NOT_AVAILABLE)},
+                              earnings={"EPS": data.get("EPS (ttm)", NOT_AVAILABLE),
+                                        "revenue": data.get("Income", NOT_AVAILABLE),
+                                        "next_earnings": data.get("Earnings", NOT_AVAILABLE)})
         except Exception as exc:
             raise PrimaryToolError("FETCH_ERROR", str(exc)) from exc
 
@@ -165,8 +178,10 @@ class MarketBeatAdapter:
             text = " ".join(soup.stripped_strings)
             if not text:
                 raise PrimaryToolError("EMPTY_RESPONSE", ticker)
-            return MarketData(ticker=ticker, primary_tool="MarketBeat", fetch_status="SUCCESS", access_time=utc_now(),
-                              analyst_data={"consensus": NOT_AVAILABLE, "financial_ratios": NOT_AVAILABLE, "raw_excerpt": text[:500]})
+            # MarketBeat's actual price/consensus figures are rendered by JavaScript,
+            # so the static HTML carries only navigation text. Treating those menu
+            # strings as data would fabricate a SUCCESS payload, so be honest instead.
+            raise PrimaryToolError("NOT_DATA_IN_STATIC_HTML", url)
         except PrimaryToolError:
             raise
         except requests.RequestException as exc:

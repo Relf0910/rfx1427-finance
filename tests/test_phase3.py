@@ -18,9 +18,19 @@ def test_cik_resolution_and_recent_filings():
 def test_company_concept_prefers_supported_form():
     client = SecClient("RFX1427-Test test@example.com")
     facts = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [{"val": 1, "form": "10-Q", "filed": "2026-01-01", "end": "2025-12-31", "accn": "a"}]}}}}}
-    fact = client._concept(facts, ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"), ("10-K", "10-Q"))
+    fact = client._concept(facts, ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"), ("10-K", "10-Q"), "a")
     assert fact.value == 1
     assert fact.form == "10-Q"
+
+
+def test_company_concept_does_not_mix_periods_from_other_accessions():
+    client = SecClient("RFX1427-Test test@example.com")
+    # A value exists globally, but only for a different accession. The filing
+    # being processed must not inherit another filing's number.
+    facts = {"facts": {"us-gaap": {"Revenues": {"units": {"USD": [{"val": 999, "form": "10-Q", "filed": "2026-01-01", "end": "2025-12-31", "accn": "other"}]}}}}}
+    fact = client._concept(facts, ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"), ("10-K", "10-Q"), "target-accn")
+    assert fact.value == "NOT AVAILABLE"
+    assert fact.raw_fact_label == "RevenueFromContractWithCustomerExcludingAssessedTax"
 
 
 def test_unknown_ticker_is_unverified(monkeypatch):

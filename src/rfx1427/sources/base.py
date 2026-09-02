@@ -7,8 +7,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from html import unescape
-from typing import Iterable
-from urllib.parse import urljoin
+from typing import Any, Iterable
+from urllib.parse import urljoin, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -121,6 +121,15 @@ def make_item(title: str, summary: str, url: str, source: str,
                     parse_date(timestamp), clean(raw, 300))
 
 
+def _rss_text(node: Any, names: tuple[str, ...]) -> str:
+    """Return the joined text of the first child tag among ``names`` (or '')."""
+    for name in names:
+        child = node.find(name)
+        if child is not None:
+            return child.get_text(" ", strip=True)
+    return ""
+
+
 def parse_rss(body: str, source: str, page_url: str) -> list[NewsItem]:
     soup = BeautifulSoup(body, "xml")
     out: list[NewsItem] = []
@@ -128,22 +137,48 @@ def parse_rss(body: str, source: str, page_url: str) -> list[NewsItem]:
         link = node.find("link")
         url = (link.get("href") if link and link.has_attr("href") else link.get_text(" ", strip=True) if link else "")
         item = make_item(
-            node.find_text(["title", "headline"], default=""),
-            node.find_text(["description", "summary", "content"], default=""),
+            _rss_text(node, ("title", "headline")),
+            _rss_text(node, ("description", "summary", "content")),
             urljoin(page_url, url), source,
-            node.find_text(["pubDate", "published", "updated"], default=""),
+            _rss_text(node, ("pubDate", "published", "updated")),
         )
         if item:
             out.append(item)
     return out
 
 
+_ARTICLE_SELECTORS = ("article", "[data-test='article']", ".news-item", ".articleItem")
+# Generik containers dipakai hanya sebagai fallback — hasilnya tetap di-filter.
+_GENERIC_SELECTORS = ("[data-testid*='story']", ".post", ".feed__item", "div.card")
+
+
+def _looks_like_navigation(title: str, url: str, page_url: str) -> bool:
+    """Reject short nav/menu entries masquerading as news items."""
+    if len(title) < 15:
+        return True
+    t = title.lower()
+    if any(w in t for w in ("login", "sign up", "sign in", "sitemap", "newsletter", "subscribe", "contact us",
+                            "search", "log in", "privacy", "terms of use", "all rights reserved", "cookie")):
+        return True
+    try:
+        path = urlparse(url).path.rstrip("/")
+    except ValueError:
+        return True
+    if not path:  # bare site root / www.example.com
+        return True
+    try:
+        if urlparse(url).netloc == urlparse(page_url).netloc and path.count("/") <= 1:
+            return True  # same-site short page like /about or /faq
+    except ValueError:
+        return True
+    return False
+
+
 def parse_html(body: str, source: str, page_url: str) -> list[NewsItem]:
     soup = BeautifulSoup(body, "html.parser")
     out: list[NewsItem] = []
-    selectors = ["article", "[data-test='article']", ".news-item", ".articleItem", "li"]
-    nodes = []
-    for selector in selectors:
+    nodes: list[Any] = []
+    for selector in (*_ARTICLE_SELECTORS, *_GENERIC_SELECTORS):
         nodes = soup.select(selector)
         if nodes:
             break
@@ -152,9 +187,12 @@ def parse_html(body: str, source: str, page_url: str) -> list[NewsItem]:
         title_node = node.find(["h1", "h2", "h3", "h4"]) or anchor
         if not title_node or not anchor:
             continue
+        title = clean(title_node.get_text(" "))
+        if _looks_like_navigation(title, str(anchor["href"]), page_url):
+            continue
         time_node = node.find("time")
         summary_node = node.find(["p", "div"], class_=re.compile("summary|description|excerpt", re.I))
-        item = make_item(clean(title_node.get_text(" ")), clean(summary_node.get_text(" ") if summary_node else node.get_text(" ")),
+        item = make_item(title, clean(summary_node.get_text(" ") if summary_node else node.get_text(" ")),
                          urljoin(page_url, anchor["href"]), source,
                          time_node.get("datetime") if time_node else None)
         if item:
