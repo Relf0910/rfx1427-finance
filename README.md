@@ -2,7 +2,7 @@
 
 ### AI Financial News Scanner and Analysis Framework
 
-[![Version](https://img.shields.io/badge/version-4.5-blue.svg)](https://github.com/Relf0910/rfx1427-finance)
+[![Version](https://img.shields.io/badge/version-4.7-blue.svg)](https://github.com/Relf0910/rfx1427-finance)
 [![Status](https://img.shields.io/badge/status-active-green.svg)](https://github.com/Relf0910/rfx1427-finance)
 [![Phases](https://img.shields.io/badge/phases-4-orange.svg)](https://github.com/Relf0910/rfx1427-finance)
 [![Language](https://img.shields.io/badge/language-English-yellow.svg)](https://github.com/Relf0910/rfx1427-finance)
@@ -42,7 +42,7 @@ The framework is designed for **Scalper, Intraday, Swing, and Investor** profile
 
 RFX1427 Finance uses a gated four-phase workflow. Each phase is opt-in where specified, and the system stops after each report instead of advancing automatically. Current data must be fetched before analysis. Missing or inaccessible data is labelled explicitly rather than estimated or fabricated.
 
-The current implementation branch is `mistral-fix4th`. Python fetch layers are implemented for Phase 1 source news, Phase 2 market data, and Phase 3 SEC EDGAR data. Phase 4 remains AI-only and does not require Python.
+The current implementation branch is `mistral-fix5th`. Python fetch layers are implemented for Phase 1 source news (WAJIB 7 target 10, staged 50→70→100 early-stop, profile-adaptive), Phase 2 market data, and Phase 3 SEC EDGAR data. Phase 4 remains AI-only and does not require Python.
 
 ## What It Does
 
@@ -53,7 +53,7 @@ The current implementation branch is `mistral-fix4th`. Python fetch layers are i
 | Python-assisted Phase 1 source fetch | Supported |
 | Source registry for ten listed sources and custom URLs | Supported |
 | Positive-only Phase 1 scan | Supported |
-| Maximum seven Phase 1 opportunities | Supported |
+| WAJIB 7 target 10 (output 7–10), staged 50→70→100 early-stop, profile-adaptive | Supported |
 | Trader profile adaptation | Supported |
 | Python-assisted Phase 2 market-data fetch | Supported |
 | Google Finance/Yahoo through `yfinance` | Supported |
@@ -98,7 +98,7 @@ GATE 0 — INTAKE
        │
        ▼
 PHASE 1 — MARKET SCANNER
-  Python source fetch → AI reads and filters → Best 7 positive opportunities
+  Python source fetch → AI reads staged pool 50→70→100 (early-stop) → Best 7–10 positive opportunities (WAJIB 7 target 10)
        │
        ▼
 STOP — WAIT FOR USER
@@ -131,11 +131,11 @@ PHASE 4 — WEEKLY BIAS SUMMARY
 
 ## Phase 1 Scanner
 
-Phase 1 accepts a selected source, market, and trader profile. The Python executor selects the matching adapter, fetches up to 50 items, normalizes the fields, removes duplicates, and emits JSON Lines. The AI then reads the items in one pass using the selected profile lens.
+Phase 1 accepts a selected source, market, and trader profile. The Python executor selects the matching adapter, fetches up to 100 items staged 50→70→100 with early-stop (target pool 10, output 7–10; at 70 if pool 7–10 STOP, at 100 if 8/9 STOP; auto-refill pagination/alternate source + Layer 2 web_search only if pool <7), normalizes, deduplicates, and emits JSON Lines. Scan counts are never disclosed. AI reads staged pool with profile-adaptive ranking.
 
-The Phase 1 Noise Gate keeps only items that have an identifiable ticker, match the selected market, have positive direction, have materiality of at least 3, have Medium or High confidence, and have Strong or Partial horizon fit. The result contains zero to seven positive opportunities; it never force-fills the list.
+The Phase 1 Noise Gate keeps only items that have an identifiable ticker, match the selected market, have positive direction, have materiality ≥3, have Medium/High confidence, and have Strong/Partial horizon fit. Profile-adaptive ranking (Materiality > Confidence > Horizon Fit > Catalyst clarity > Freshness, plus profile weighting) selects 7–10 best positives — WAJIB 7 target 10, staged 50→70→100 with early-stop (at 70 if pool 7–10 STOP; at 100 if 8/9 STOP). Rare fail-safe with disclaimer is the only exception.
 
-The locked report begins with `# MARKET SCANNER`, contains opportunity cards, and ends with exactly:
+The locked report begins with `# MARKET SCANNER` (no `Items scanned` line), contains 7–10 opportunity cards (#1→#7, up to #10 if pool qualifies), and ends with exactly:
 
 ```text
 STOP
@@ -341,7 +341,7 @@ The following rules remain authoritative:
 4. Never fabricate a ticker, price, filing, financial figure, level, rating, or source result.
 5. No ticker means noise.
 6. Phase 1 reports positive opportunities only, with materiality at least 3, Medium or High confidence, and no Poor horizon fit.
-7. Phase 1 reports at most seven opportunities and never force-fills the list.
+7. Phase 1 reports 7–10 positive opportunities — WAJIB 7 target 10, profile-adaptive, staged 50→70→100 with early-stop (at 70 if 7–10 STOP; at 100 if 8/9 STOP). Python expands window (pagination/alternate source + Layer 2 web_search) only if pool <7; hard gates never lowered; fail-safe with disclaimer is the only exception.
 8. Phase 2 is opt-in and uses the user-selected Primary Tool only.
 9. Phase 2 does not use SEC EDGAR.
 10. Phase 3 is a separate opt-in SEC verification phase.
@@ -366,16 +366,19 @@ The following rules remain authoritative:
 
 | Commit | Change |
 |---|---|
-| `64dde77` | Implemented the Phase 1 Python source fetch layer |
-| `cfbc77a` | Implemented the Phase 2 Python market-data fetch layer |
-| `e9a4069` | Implemented the Phase 3 SEC EDGAR fetch and parsing layer |
-| Current | Rewrote README in English and synchronized it with the complete implementation |
+| `64dde77` | Implemented Phase 1 Python source fetch layer |
+| `cfbc77a` | Implemented Phase 2 Python market-data fetch layer |
+| `e9a4069` | Implemented Phase 3 SEC EDGAR fetch and parsing layer |
+| `4114b60` | Fix data-correctness Phases 1-3: accession matching, Finviz fields, HTML/RSS filtering |
+| `a46fa36` | Fix Finviz Phase 1 parser: handle table layout (tr.news_table-row) |
+| v4.6 | Phase 1 Exactly 7 mandatory (WAJIB 7, profile-adaptive: Scalper/Intraday/Swing/Investor), limit 50→100 + auto-refill, no scan-count disclosure, fail-safe with disclaimer |
+| v4.7 | Phase 1 WAJIB 7 target 10 (output 7–10), staged 50→70→100 with early-stop, profile-adaptive ranking |
 
 ## References
 
 [1]: https://www.sec.gov/search-filings/edgar-application-programming-interfaces "SEC EDGAR Application Programming Interfaces"
 [2]: https://www.sec.gov/about/developer-resources "SEC Developer Resources"
-[3]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix4th/SKILL.md "RFX1427 Finance Master Skill"
-[4]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix4th/references/phase1-scanner.md "Phase 1 Scanner Specification"
-[5]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix4th/references/phase2-deep-analysis.md "Phase 2 Deep Analysis Specification"
-[6]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix4th/references/phase3-sec-edgar.md "Phase 3 SEC EDGAR Specification"
+[3]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix5th/SKILL.md "RFX1427 Finance Master Skill"
+[4]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix5th/references/phase1-scanner.md "Phase 1 Scanner Specification"
+[5]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix5th/references/phase2-deep-analysis.md "Phase 2 Deep Analysis Specification"
+[6]: https://github.com/Relf0910/rfx1427-finance/blob/mistral-fix5th/references/phase3-sec-edgar.md "Phase 3 SEC EDGAR Specification"
