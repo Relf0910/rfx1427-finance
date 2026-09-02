@@ -174,8 +174,43 @@ def _looks_like_navigation(title: str, url: str, page_url: str) -> bool:
     return False
 
 
+def _parse_finviz_table(soup: BeautifulSoup, source: str, page_url: str) -> list[NewsItem]:
+    """Finviz uses <tr class=\"news_table-row\"> with <a class=\"nn-tab-link\">, not <article>."""
+    out: list[NewsItem] = []
+    for row in soup.select("tr.news_table-row"):
+        anchor = row.select_one("a.nn-tab-link[href]") or row.find("a", href=True)
+        if not anchor:
+            continue
+        title = clean(anchor.get_text(" "))
+        href = str(anchor.get("href", "")).strip()
+        if not title or not href:
+            continue
+        url = urljoin(page_url, href)
+        if _looks_like_navigation(title, url, page_url):
+            continue
+        # Finviz time is in td.news_date-cell ("09:27PM"); summary in data-boxover-text
+        time_text: str | None = None
+        time_cell = row.select_one("td.news_date-cell")
+        if time_cell:
+            time_text = clean(time_cell.get_text(" "))
+        link_cell = row.select_one("td.news_link-cell")
+        summary = clean(link_cell.get("data-boxover-text", "")) if link_cell and link_cell.has_attr("data-boxover-text") else ""
+        if not summary:
+            summary = title
+        # pass raw time_text; parse_date will try, else stored as None and sorted last — still a valid item
+        item = make_item(title, summary, url, source, time_text)
+        if item:
+            out.append(item)
+    return out
+
+
 def parse_html(body: str, source: str, page_url: str) -> list[NewsItem]:
     soup = BeautifulSoup(body, "html.parser")
+    # Fast-path for Finviz table layout — must run before the generic article selectors
+    if "finviz.com" in page_url:
+        finviz_items = _parse_finviz_table(soup, source, page_url)
+        if finviz_items:
+            return finviz_items
     out: list[NewsItem] = []
     nodes: list[Any] = []
     for selector in (*_ARTICLE_SELECTORS, *_GENERIC_SELECTORS):
