@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import sys
@@ -130,17 +129,44 @@ class YFinanceAdapter:
 
 
 class FinvizAdapter:
-    name = "finvizfinance"
+    name = "finviz"
 
     def fetch(self, ticker: str, profile: str) -> MarketData:
+        # Direct HTML scrape. The finvizfinance 0.14.x library hits a
+        # "'NoneType' object has no attribute 'find_all'" bug because Finviz
+        # changed their snapshot table structure. We re-implement the parse
+        # here using requests + BeautifulSoup, both already in our deps.
+        url = f"https://finviz.com/quote.ashx?t={ticker}"
         try:
-            from finvizfinance.quote import finvizfinance
-        except ImportError as exc:
-            raise PrimaryToolError("DEPENDENCY_MISSING", "finvizfinance") from exc
+            response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=(5, 20))
+            if response.status_code in {403, 429}:
+                raise PrimaryToolError(f"HTTP_{response.status_code}", url)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            raise PrimaryToolError("REQUEST_ERROR", str(exc)) from exc
         try:
-            quote = finvizfinance(ticker)
-            data = quote.ticker_fundament()
-            price = _float(data.get("Price"))
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(response.text, "html.parser")
+            # Build {label: value} map by walking all snapshot-table cells.
+            data: dict[str, str] = {}
+            for cell in soup.select("td.snapshot-table2__cell, td.snapshot-table2__cell-s"):
+                txt = cell.get_text(strip=True)
+                if not txt:
+                    continue
+                # Cells come in label/value pairs, no class differentiation — collect raw.
+                data.setdefault(f"_raw_{len(data)}", txt)
+            # Better: iterate <tr> rows in any snapshot table and pair cells (label, value).
+            data = {}
+            for row in soup.select("tr"):
+                cells = [c.get_text(strip=True) for c in row.select("td")]
+                for i in range(0, len(cells) - 1, 2):
+                    label, value = cells[i], cells[i + 1]
+                    if label and value and label not in data:
+                        data[label] = value
+            if not data:
+                raise PrimaryToolError("EMPTY_RESPONSE", ticker)
+            company_tag = soup.select_one("h2.quote-header_ticker-wrapper__name")
+            company = company_tag.get_text(strip=True) if company_tag else NOT_AVAILABLE
             levels = {
                 "RSI": _float(data.get("RSI", "")),
                 "SMA_20": _float(str(data.get("SMA20", "")).replace("%", "")),
@@ -149,8 +175,8 @@ class FinvizAdapter:
                 "52_week_low": _float(str(data.get("52W Low", "")).split()[0]),
             }
             return MarketData(ticker=ticker, primary_tool="Finviz", fetch_status="SUCCESS", access_time=utc_now(),
-                              company=data.get("Company", NOT_AVAILABLE),
-                              price=price,
+                              company=company,
+                              price=_float(data.get("Price")),
                               change_percent=_float(str(data.get("Change %", "")).replace("%", "")),
                               volume=data.get("Volume", NOT_AVAILABLE),
                               technical_levels=levels,
@@ -159,6 +185,8 @@ class FinvizAdapter:
                               earnings={"EPS": data.get("EPS (ttm)", NOT_AVAILABLE),
                                         "revenue": data.get("Income", NOT_AVAILABLE),
                                         "next_earnings": data.get("Earnings", NOT_AVAILABLE)})
+        except PrimaryToolError:
+            raise
         except Exception as exc:
             raise PrimaryToolError("FETCH_ERROR", str(exc)) from exc
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import time
 from dataclasses import asdict, dataclass, field
@@ -202,16 +201,17 @@ def fetch_with_fallback(ticker: str, user_agent: str) -> SecResult:
     result = primary.fetch(ticker)
     if result.sec_status == "SUCCESS":
         return result
-    # Alternate remains official SEC: submissions endpoint via www.sec.gov with the same CIK.
-    # A result that cannot be re-resolved remains explicitly UNVERIFIED; no web-search fallback.
+    # There is no true alternate SEC source — both calls hit the same official
+    # data.sec.gov endpoints. So the "alternate" attempt only re-checks whether the
+    # ticker/CIK is resolvable; it never claims a second data source succeeded.
+    # The result stays UNVERIFIED and no fabricated filings are propagated.
     alternate = SecClient(user_agent, min_interval=0.2)
     try:
         cik, company = alternate.resolve(ticker)
         alt = alternate.submissions(cik)
         if alt.get("filings", {}).get("recent"):
             result.company, result.cik = company, cik
-            result.collection_method = "python_sec_alternate"
-            result.error_detail = f"primary={result.error_code}; alternate_available_but_parse_failed"
+            result.error_detail = f"primary={result.error_code}; alternate_resolvable_but_fetch_failed"
     except SecAccessError as exc:
         result.error_detail = f"primary={result.error_code}; alternate={exc.code}"
     result.sec_status = "UNVERIFIED"

@@ -20,13 +20,9 @@ SOURCE_URLS: dict[str, list[str]] = {
 
 ALIASES = {
     "yahoo": "yahoo finance",
-    "yahoo finance": "yahoo finance",
     "investing": "investing.com",
-    "investing.com": "investing.com",
-    "pr newswire": "pr newswire",
     "prnewswire": "pr newswire",
     "globe newswire": "globenewswire",
-    "globenewswire": "globenewswire",
     "motley fool": "motley fool",
     "stock analysis": "stockanalysis.com",
     "stockanalysis": "stockanalysis.com",
