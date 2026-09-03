@@ -157,7 +157,15 @@ class SecClient:
             submissions = self.submissions(cik)
             facts = self.companyfacts(cik)
             rows = self._recent_filings(submissions)
-            for row in rows[:20]:
+            # Prioritise periodic reports (10-K, 10-Q, 6-K) and material
+            # event filings (8-K) — the rows that actually carry financial
+            # facts — over Form 4 insider transactions, so a high-frequency
+            # insider period does not push the most recent 10-Q out of the
+            # window used for AI verification.
+            periodic = [r for r in rows if r["form"] in {"10-K", "10-Q", "6-K", "8-K"}]
+            insider = [r for r in rows if r["form"] == "4"]
+            ordered = (periodic + insider)[:20]
+            for row in ordered:
                 accession = row["accessionNumber"].replace("-", "")
                 document = row["primaryDocument"]
                 source_url = f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession}/{document}"
