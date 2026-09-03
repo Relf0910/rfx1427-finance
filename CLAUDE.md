@@ -1,5 +1,9 @@
 # CLAUDE.md — Project context for Claude Code
 
+> **⚠️ PERSONAL-USE TOOL**
+> Built for my own personal use and for fun. Not a product. Not financial advice.
+> Not production-ready. Use at your own risk.
+
 This is the `rfx1427-finance` repo (v4.7.1). Claude Code reads this file automatically to
 understand the project. For full framework rules, see `SKILL.md` and `references/`.
 
