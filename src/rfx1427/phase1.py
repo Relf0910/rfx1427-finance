@@ -46,15 +46,17 @@ def emit_jsonl(result: FetchResult, *, stream=sys.stdout) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 1 Python fetcher")
-    parser.add_argument("--source", required=True, help="Listed source name or custom URL")
+    parser.add_argument("--list-sources", action="store_true", help="List all supported source names and exit")
+    parser.add_argument("--source", help="Listed source name or custom URL (required unless --list-sources)")
     parser.add_argument("--market", default="US")
     parser.add_argument("--profile", default="INTRADAY", choices=["SCALPER", "INTRADAY", "SWING", "INVESTOR"])
     parser.add_argument("--limit", type=int, default=100)
-    parser.add_argument("--list-sources", action="store_true")
     args = parser.parse_args()
     if args.list_sources:
         print("\n".join(supported_sources()))
         return 0
+    if not args.source:
+        parser.error("the following arguments are required: --source (or pass --list-sources)")
     result = run_phase1(args.source, args.market, args.profile, max(1, min(args.limit, 100)))
     emit_jsonl(result)
     return 0 if result.status == FetchStatus.SUCCESS.value else 2

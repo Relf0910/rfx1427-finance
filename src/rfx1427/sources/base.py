@@ -140,7 +140,13 @@ def _rss_text(node: Any, names: tuple[str, ...]) -> str:
 
 
 def parse_rss(body: str, source: str, page_url: str) -> list[NewsItem]:
-    soup = BeautifulSoup(body, "xml")
+    # Prefer lxml when available (fast, robust). Fall back to html.parser so a
+    # missing XML tree-builder never crashes the feed — it degrades gracefully
+    # to the same item-extraction logic below.
+    try:
+        soup = BeautifulSoup(body, "xml")
+    except Exception:
+        soup = BeautifulSoup(body, "html.parser")
     out: list[NewsItem] = []
     for node in soup.find_all(["item", "entry"]):
         link = node.find("link")

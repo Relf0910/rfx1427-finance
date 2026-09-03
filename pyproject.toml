@@ -10,6 +10,7 @@ requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31,<3",
   "beautifulsoup4>=4.12,<5",
+  "lxml>=5.0,<6",
   "feedparser>=6.0,<7",
   "yfinance>=0.2,<1",
 ]
