@@ -116,4 +116,8 @@ rfx1427-finance/
 
 ## Licence
 
-Personal use only. No licence file. See the top of this README.
+Copyright (c) 2026 Relf0910. All Rights Reserved.
+
+This is a personal-use project. You may view and read the code, but you may not
+copy, redistribute, modify, or claim it as your own without written permission.
+Not financial advice. See [`LICENSE`](LICENSE) for full terms.
