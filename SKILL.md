@@ -1,6 +1,6 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.5 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Every phase has a layered fallback for Python failure (Python fetch → alternate method → official failure label). Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.7.1 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Runs on Claude Code / claude.ai (Anthropic) and OpenAI; other AI platforms supported. Every phase has a layered fallback for Python failure (Python fetch → alternate method → official failure label). Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
@@ -52,6 +52,16 @@ END
 - User interaction: Bahasa Melayu
 - Code, identifiers, error states, table headers, status enum: English (verbatim from framework)
 - Report output (Phase 1/2/3/4): Language according to user `output_language` selection (English, Bahasa Melayu, Other)
+
+## Platforms
+
+| Agent | File | Status |
+|-------|------|--------|
+| Claude Code / claude.ai | `agents/claude.yaml` | ✅ Primary |
+| OpenAI | `agents/openai.yaml` | ✅ Supported |
+| Other AI platforms | Skill interface (agent-agnostic) | ✅ Compatible |
+
+The skill framework is agent-agnostic. Python fetch layer (`phase1.py`, `phase2.py`, `phase3.py`) and locked output templates are platform-independent.
 
 ## Global Flow (Session Architecture)
 
@@ -172,9 +182,9 @@ END
 
 ---
 
-## Gate 0 — Intake (3 Questions)
+## Gate 0 — Intake (2 Questions, Market Locked to US)
 
-Ask ONE at a time.
+Ask ONE at a time. Market is fixed to **US** (no question asked).
 
 ### Intake Presentation Mode — ADAPTIVE (no content change)
 
@@ -182,7 +192,7 @@ Present each intake question using the platform's native choice/option UI when t
 platform provides one (e.g. selectable buttons, arrow-key + Enter menus, option panels).
 This lets the user answer with the arrow keys and Enter instead of typing manually.
 
-- IF the current AI platform supports an interactive choice/option UI → render Q1/Q2/Q3
+- IF the current AI platform supports an interactive choice/option UI → render Q1/Q2
   as native selectable choices (arrow keys + Enter). Ask one question at a time.
 - IF the platform does NOT provide such a UI → fall back to the manual text prompts below
   (list options as `[English] [Bahasa Melayu] [Other]` and let the user type).
@@ -197,12 +207,12 @@ This lets the user answer with the arrow keys and Enter instead of typing manual
 - [Scalper] [Intraday] [Swing] [Investor]
 - → record: `trader_profile`
 
-**Q3:** "What market focus?" — (adaptive: use native choice UI if available, else type)
-- [US] [Singapore] [Malaysia] [Other]
-- → record: `market`
+**Market (locked):** `US` — no question. Recorded automatically. Selecting non-US markets
+is not supported in this build; `phase1.py` returns `FALLBACK_NEEDED` with
+`error_code="MARKET_NOT_SUPPORTED"` for any other value.
 
 [INTAKE COMPLETE]
-"Language: X | Profile: X | Market: X"
+"Language: X | Profile: X | Market: US (locked)"
 → PROCEED TO PHASE 1
 
 ## Profile Definitions

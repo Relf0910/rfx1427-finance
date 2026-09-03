@@ -57,8 +57,8 @@ The current implementation branch is `mistral-fix5th`. Python fetch layers are i
 | Trader profile adaptation | Supported |
 | Python-assisted Phase 2 market-data fetch | Supported |
 | Google Finance/Yahoo through `yfinance` | Supported |
-| Finviz through `finvizfinance` | Supported |
-| MarketBeat through HTTP and HTML parsing | Supported |
+| Finviz through `finvizfinance` | Supported (beta; requires finvizfinance dep) |
+| MarketBeat — BLOCKED | JS-rendered; returns FALLBACK_NEEDED, auto-falls back to Yahoo |
 | Profile-specific Phase 2 market levels | Supported |
 | Python-assisted SEC EDGAR fetch and parsing | Supported |
 | Ticker-to-CIK resolution | Supported |
