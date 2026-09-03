@@ -3,9 +3,9 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "rfx1427-finance-phase1"
-version = "4.7.0"
-description = "Python source fetch layer for RFX1427 Finance Phase 1"
+name = "rfx1427-finance"
+version = "4.7.1"
+description = "Python fetch layer for RFX1427 Finance (Phase 1, 2, 3)"
 requires-python = ">=3.10"
 dependencies = [
   "requests>=2.31,<3",
