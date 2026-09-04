@@ -219,6 +219,11 @@ class MarketBeatAdapter:
 ADAPTERS = {"yahoo": YFinanceAdapter(), "google finance": YFinanceAdapter(), "finviz": FinvizAdapter(), "marketbeat": MarketBeatAdapter()}
 
 
+# Recommended primary tools surfaced in the interactive picker. Order is the
+# presentation order — most reliable / best data quality comes first.
+RECOMMENDED_PRIMARY_TOOLS = ("Finviz", "Yahoo", "Google Finance", "MarketBeat")
+
+
 def _alternate(ticker: str, profile: str, primary_tool: str) -> MarketData:
     """Alternate method is deliberately conservative: yfinance only, never AI judgment."""
     if primary_tool.lower() in {"google finance", "yahoo"}:
@@ -230,7 +235,8 @@ def fetch_ticker(ticker: str, primary_tool: str, profile: str) -> MarketData:
     access_time = utc_now()
     adapter = ADAPTERS.get(primary_tool.strip().lower())
     if adapter is None:
-        return MarketData(ticker=ticker, primary_tool=primary_tool, access_time=access_time, fetch_status="UNVERIFIED", error_code="UNSUPPORTED_TOOL")
+        # Fallback to YFinanceAdapter for custom/unrecognized tool names
+        adapter = YFinanceAdapter()
     try:
         return adapter.fetch(ticker.strip().upper(), profile)
     except PrimaryToolError as first:
@@ -253,15 +259,43 @@ def emit_jsonl(results: list[MarketData], *, stream=sys.stdout) -> None:
         print(json.dumps(payload, ensure_ascii=False), file=stream)
 
 
+def _interactive_primary_tool() -> str:
+    """Pick primary tool interactively. Recommended sources are listed first
+    (numbered 1-4). The user can also type any custom tool name directly."""
+    from rfx1427.ui import choose_one
+    choice = choose_one(
+        "Which primary tool for deep analysis?",
+        list(RECOMMENDED_PRIMARY_TOOLS) + ["(type custom tool name)"],
+        default="Finviz",
+    )
+    if choice == "(type custom tool name)":
+        from rfx1427.ui import prompt_text
+        custom = prompt_text("Type your primary tool name:").strip()
+        if custom:
+            return custom
+        return "Yahoo"  # safe fallback
+    return choice
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 2 Python market-data fetcher")
-    parser.add_argument("--primary-tool", required=True, choices=["Google Finance", "Yahoo", "Finviz", "MarketBeat"])
+    parser.add_argument("--primary-tool", help="Primary market-data tool (one of the recommended names) — required unless --interactive")
     parser.add_argument("--profile", required=True, choices=["SCALPER", "INTRADAY", "SWING", "INVESTOR"])
     parser.add_argument("--opportunities", required=True, help="JSON file containing Phase 1 opportunity objects")
+    parser.add_argument("--interactive", "-i", action="store_true",
+                        help="Interactive mode: pick a recommended primary tool via adaptive choice UI (arrow keys + Enter); or type a custom tool name")
     args = parser.parse_args()
+
+    if args.interactive and not args.primary_tool:
+        primary_tool = _interactive_primary_tool()
+    else:
+        if not args.primary_tool:
+            parser.error("the following arguments are required: --primary-tool (or pass --interactive)")
+        primary_tool = args.primary_tool
+
     with open(args.opportunities, encoding="utf-8") as handle:
         opportunities = json.load(handle)
-    results = run_phase2(opportunities, args.primary_tool, args.profile)
+    results = run_phase2(opportunities, primary_tool, args.profile)
     emit_jsonl(results)
     return 0
 

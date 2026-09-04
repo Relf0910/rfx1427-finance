@@ -27,7 +27,7 @@ is distributed.
 |-------|------|--------|-----------|
 | 1. Scanner | Fetch news, output 7–10 positive opportunities (WAJIB 7, target 10) | `phase1.py` | `references/phase1-scanner.md` |
 | 2. Deep Analysis | Market data via user-selected Primary Tool | `phase2.py` | `references/phase2-deep-analysis.md` |
-| 3. SEC EDGAR | Verify via official SEC API (opt-in) | `phase3.py` | `references/phase3-sec-edgar.md` |
+| 3. SEC EDGAR | Verify via official SEC API (mandatory) | `phase3.py` | `references/phase3-sec-edgar.md` |
 | 4. Weekly Bias | AI-only summary (locked format) | — | `references/phase4-weekly-bias.md` |
 
 ## Quick start
@@ -58,7 +58,7 @@ Two questions only, asked one at a time:
 2. **Positive-only Phase 1.** Discard negative / mixed / neutral.
 3. **WAJIB 7, target 10.** Staged 50→70→100 fetch with early-stop. Never lower thresholds.
 4. **One question at a time** in Gate 0.
-5. **No auto-advance phases.** Wait for explicit user opt-in between phases.
+5. **Phase 3 auto-proceeds.** Phase 1 and Phase 2 wait for user opt-in; Phase 3 runs automatically after Phase 2.
 
 Full rule list: `references/hard-rules-master.md` (39 rules) and `SKILL.md`.
 

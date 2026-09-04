@@ -1,16 +1,16 @@
-# Phase 3 — SEC EDGAR Verification (Python + AI Unified, Opt-in Only)
+# Phase 3 — SEC EDGAR Verification (Python + AI Unified, Mandatory)
 
 Source: Framework v4.5
 
 ## Overview
 
-Phase 3 is **OPT-IN ONLY**. Only runs if user explicitly requests SEC EDGAR verification. Python works directly with the AI: Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and labels VERIFIED / UNVERIFIED. No collect-then-read two-pass.
+Phase 3 is **MANDATORY**. Auto-proceeds after Phase 2 completes. Python works directly with the AI: Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and labels VERIFIED / UNVERIFIED. No collect-then-read two-pass.
 
 **IMPORTANT: Phase 3 is SEPARATE from Phase 2. Phase 2 does NOT include SEC.**
 
 ## PHASE 3 — RULES (MANDATORY)
 
-1. **Only run if user opt-in**
+1. **Mandatory after Phase 2** — auto-proceeds, no user prompt needed
 2. **If still fails** → label `UNVERIFIED — SEC DATA NOT AVAILABLE`
 3. Do NOT fabricate data
 4. **No auto-proceed** — ask user at every step
@@ -31,13 +31,10 @@ User explicitly asks:
 - "SEC verification"
 - "Phase 3"
 
-At STOP 2, ask user:
-> "Run SEC EDGAR Verification?"
+After Phase 2 report, Phase 3 auto-proceeds:
+> "Running SEC EDGAR Verification..."
 
-Options:
-- [Yes] → Proceed to Phase 3
-- [Skip — Continue to Phase 4] → Proceed to Phase 4
-- [Skip] → END
+Python accesses SEC EDGAR for all Phase 1 tickers automatically.
 
 ## STEP 3A — Python-Assisted SEC Fetch
 
@@ -121,7 +118,7 @@ Output must begin with:
 
 ```markdown
 **PHASE 3 — SEC EDGAR VERIFICATION**
-(Opt-in sahaja | Akses: [DATE TIME])
+(Mandatory | Akses: [DATE TIME])
 ```
 
 ### 1. Fetch Attempt
@@ -160,6 +157,6 @@ WAIT FOR USER
 
 1. Never skip a required table or section
 2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
-3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+3. Phase 3 auto-proceeds after Phase 2. Always stop and wait for explicit user opt-in for Phase 4
 4. Keep the exact markdown structure, bold labels, and stop phrases shown above
 5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

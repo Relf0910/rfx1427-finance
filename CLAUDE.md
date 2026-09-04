@@ -25,7 +25,7 @@ Or via installed entry-points: `rfx1427-phase1`, `rfx1427-phase2`, `rfx1427-phas
 |-------|--------------|-----------|--------------|
 | 1. Scanner | Fetch news, 7-10 positive cards (WAJIB 7, target 10) | `references/phase1-scanner.md` | `phase1.py` |
 | 2. Deep Analysis | Market data via Primary Tool (NO SEC) | `references/phase2-deep-analysis.md` | `phase2.py` |
-| 3. SEC EDGAR | Verify via official SEC API (opt-in) | `references/phase3-sec-edgar.md` | `phase3.py` |
+| 3. SEC EDGAR | Verify via official SEC API (mandatory) | `references/phase3-sec-edgar.md` | `phase3.py` |
 | 4. Weekly Bias | AI-only summary (locked format) | `references/phase4-weekly-bias.md` | — |
 
 ## Gate 0 — Intake (Locked)
@@ -55,7 +55,7 @@ Market is **locked to US** — no question, no branching. Do not invent non-US p
 2. **Positive-only Phase 1** — discard negative / mixed / neutral.
 3. **WAJIB 7, target 10** — staged 50→70→100 with early-stop; never lower thresholds.
 4. **One question at a time** in Gate 0.
-5. **No auto-advance** phases — wait for explicit user opt-in between phases.
+5. **Phase 3 auto-proceeds** after Phase 2; Phases 1 and 2 wait for user opt-in.
 
 ## Common Tasks
 

@@ -227,12 +227,46 @@ def emit_jsonl(results: Iterable[SecResult], *, stream=sys.stdout) -> None:
         print(json.dumps({"type": "phase3_sec_data", **result.to_dict()}, ensure_ascii=False), file=stream)
 
 
+def _tickers_from_opportunities(path: str) -> list[str]:
+    """Extract unique tickers from a Phase 1 JSONL file."""
+    tickers: set[str] = set()
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+                ticker = obj.get("ticker") or obj.get("TICKER")
+                if ticker and str(ticker).strip():
+                    tickers.add(str(ticker).strip().upper())
+            except (json.JSONDecodeError, OSError):
+                continue
+    return sorted(tickers)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 3 SEC EDGAR fetcher")
-    parser.add_argument("--tickers", nargs="+", required=True)
+    parser.add_argument("--tickers", nargs="+", help="One or more tickers to verify (mutually exclusive with --opportunities)")
+    parser.add_argument("--opportunities", help="Phase 1 JSONL file — tickers auto-detected (mutually exclusive with --tickers)")
     parser.add_argument("--user-agent", required=True, help="Application name and contact email")
     args = parser.parse_args()
-    results = run_phase3(args.tickers, args.user_agent)
+
+    if args.tickers and args.opportunities:
+        parser.error("use only one of --tickers or --opportunities, not both")
+
+    if not args.tickers and not args.opportunities:
+        parser.error("one of --tickers or --opportunities is required")
+
+    if args.opportunities:
+        tickers = _tickers_from_opportunities(args.opportunities)
+    else:
+        tickers = [t.strip().upper() for t in args.tickers if t.strip()]
+
+    if not tickers:
+        parser.error("no tickers found in --opportunities file")
+
+    results = run_phase3(tickers, args.user_agent)
     emit_jsonl(results)
     return 0
 

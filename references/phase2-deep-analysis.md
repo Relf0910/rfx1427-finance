@@ -8,7 +8,7 @@ Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool
 
 **IMPORTANT: No SEC EDGAR in Phase 2. SEC is handled in Phase 3 separately.**
 
-**Phase 2 is: OPT-IN ONLY**
+**Phase 2 is: OPT-IN ONLY (user chooses to run it)**
 
 **Default Primary Tool: Google Finance** — If user does not choose, use Google Finance.
 
@@ -17,7 +17,7 @@ Phase 2 performs detailed analysis on Phase 1 opportunities using **Primary Tool
 1. **FETCH STATUS must be shown** — SUCCESS / BLOCKED / UNVERIFIED
 2. **Do NOT invent data** — use NOT AVAILABLE, UNVERIFIED, BLOCKED
 3. **Do NOT give buy/sell signals** — use labels: POSITIVE / NEUTRAL / NEGATIVE
-4. **NO SEC in Phase 2** — SEC is handled in Phase 3 (separate opt-in phase)
+4. **NO SEC in Phase 2** — SEC is handled in Phase 3 (mandatory, auto-proceeds)
 5. **Python fetches + prepares; AI judges** — Python does NOT analyze
 
 ## Python + AI Division of Work (Phase 2)
@@ -293,6 +293,6 @@ WAIT FOR USER
 
 1. Never skip a required table or section
 2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
-3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+3. Phase 2 waits for user opt-in; Phase 3 is mandatory and auto-proceeds
 4. Keep the exact markdown structure, bold labels, and stop phrases shown above
 5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

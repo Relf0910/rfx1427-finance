@@ -88,19 +88,61 @@ def emit_jsonl(result: FetchResult, *, stream=sys.stdout) -> None:
                           "reason": result.error_code, "detail": result.error_detail}, ensure_ascii=False), file=stream)
 
 
+INTERACTIVE_PROFILE_ORDER = ["INTRADAY", "SCALPER", "SWING", "INVESTOR"]
+
+
+def run_interactive() -> int:
+    """Gate 0 + source picker using adaptive platform UI.
+
+    Uses the platform's native choice UI (arrow keys + Enter) when
+    available, else falls back to numbered text prompts. Market is
+    locked to US — no market question is asked.
+    """
+    from rfx1427.ui import choose_one
+
+    # Gate 0 Q1 — language is collected for the AI layer; Python keeps
+    # the value only for the confirmation line (it does not affect fetch).
+    language = choose_one(
+        "What language for output?",
+        ["English", "Bahasa Melayu", "Other"],
+        default="English",
+    )
+    # Gate 0 Q2 — trader profile drives downstream AI ranking.
+    profile = choose_one(
+        "What trader profile?",
+        INTERACTIVE_PROFILE_ORDER,
+        default="INTRADAY",
+    )
+    # Phase 1 source picker from the supported-source registry.
+    source = choose_one(
+        "Which news source?",
+        list(supported_sources()),
+        default="finviz",
+    )
+    print(f"Language: {language} | Profile: {profile} | Market: US (locked)", file=sys.stderr)
+    print("PROCEED → PHASE 1", file=sys.stderr)
+    result = run_phase1(source, "US", profile)
+    emit_jsonl(result)
+    return 0 if result.status == FetchStatus.SUCCESS.value else 2
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 1 Python fetcher")
     parser.add_argument("--list-sources", action="store_true", help="List all supported source names and exit")
-    parser.add_argument("--source", help="Listed source name or custom URL (required unless --list-sources)")
+    parser.add_argument("--source", help="Listed source name or custom URL (required unless --list-sources or --interactive)")
     parser.add_argument("--market", default="US", help="Market focus (Gate 0 locked to US)")
     parser.add_argument("--profile", default="INTRADAY", choices=["SCALPER", "INTRADAY", "SWING", "INVESTOR"])
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--interactive", "-i", action="store_true",
+                        help="Interactive mode: pick language, profile, and source via adaptive choice UI (arrow keys + Enter when supported)")
     args = parser.parse_args()
     if args.list_sources:
         print("\n".join(supported_sources()))
         return 0
+    if args.interactive and not args.source:
+        return run_interactive()
     if not args.source:
-        parser.error("the following arguments are required: --source (or pass --list-sources)")
+        parser.error("the following arguments are required: --source (or pass --list-sources or --interactive)")
     result = run_phase1(args.source, args.market, args.profile, max(1, min(args.limit, 100)))
     emit_jsonl(result)
     return 0 if result.status == FetchStatus.SUCCESS.value else 2

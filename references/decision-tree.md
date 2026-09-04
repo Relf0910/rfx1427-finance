@@ -60,13 +60,11 @@ STOP
           ▼
          STOP
           │
-          └── USER ASKS
-                 │
-                 ▼
-             PHASE 3
-                 │
-                 ▼
-                END
+          ▼
+    PHASE 3 (auto-proceeds, mandatory)
+          │
+          ▼
+        END
 ```
 
 ## Ringkasan titik putus
@@ -76,5 +74,4 @@ STOP
 - Tiada opportunity → report → `STOP`.
 - User pilih Skip → `END`.
 - Mechanism rejected atau low confidence → `SKIP`.
-- User tidak minta Phase 3 → `STOP`.
-- Selepas Phase 3 → `END`.
+- After Phase 2 → Phase 3 auto-proceeds → `END`.

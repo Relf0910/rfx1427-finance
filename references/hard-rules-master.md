@@ -39,7 +39,7 @@ Sumber: framework v4.7.
 
 ## Phase 3
 
-27. User must explicitly ask.
+27. Mandatory after Phase 2 (auto-proceeds; no user prompt needed).
 28. Estimates must be labelled.
 29. No guaranteed prediction.
 30. End after summary.
