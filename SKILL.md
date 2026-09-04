@@ -42,7 +42,7 @@ END
 - **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
 - **NO FABRICATION** — never fabricate news, ticker, price, volume, financial figures, filing, rating, level, or source access. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED` when needed
 - **OPT-IN ONLY** — Phase 2 on user selection. **Phase 3 SEC Verification is mandatory** (auto-proceeds after Phase 2). Phase 4 only on user request
-- **NO AUTOMATIC PHASE TRANSITION** — phase cannot jump without permission
+- **NO AUTOMATIC PHASE TRANSITION** — Phase 1→2 and Phase 3→4 must wait for user; only Phase 2→3 is automatic (mandatory Phase 3)
 - **NO LOOP, NO MONITOR, NO AUTO-PROCEED** — each session is fresh
 - **ONE QUESTION AT A TIME** for Intake
 - **READ-ONLY ANALYSIS** — not a trading advisor. No buy/sell, entry, stop-loss, position sizing, or guaranteed target
@@ -906,7 +906,7 @@ WAIT FOR USER
 ```
 
 > After the Ranking Summary, output exactly `STOP` then `WAIT FOR USER` on separate lines.
-> Do not proceed to Phase 3 unless the user explicitly opts in.
+> Phase 3 is mandatory — auto-proceeds after Phase 2 completes.
 
 ---
 
