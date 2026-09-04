@@ -12,27 +12,71 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-from rfx1427.models import FetchResult, FetchStatus
+from rfx1427.models import FetchResult, FetchStatus, utc_now
+from rfx1427.sources.base import (
+    POOL_MIN,
+    POOL_TARGET,
+    STAGE_1_LIMIT,
+    STAGE_2_LIMIT,
+    STAGE_3_LIMIT,
+)
 from rfx1427.sources.registry import build_adapter, supported_sources
+
+
+# Market is locked to US (Gate 0 in v4.7.1).
+SUPPORTED_MARKETS = ("US",)
 
 
 def run_phase1(source: str, market: str = "US", profile: str = "INTRADAY", limit: int = 100) -> FetchResult:
     """Fetch and normalize source items. AI remains responsible for all judgment.
 
-    v4.7: staged 50→70→100 with early-stop, WAJIB 7 target 10 (output 7–10).
-    Python fetches up to limit (default 100); AI reads staged pool:
-    1→50 (if ≥7 continue to 10), 51→70 (if pool 7–10 at 70 STOP), 71→100
-    (if 8/9 at 100 STOP). STAGE_1=50, STAGE_2=70, STAGE_3=100, POOL_MIN=7,
-    POOL_TARGET=10 defined in sources/base.py. Scan counts never disclosed.
+    v4.7.1: staged 50→70→100 with early-stop, WAJIB 7 target 10 (output 7–10).
+    Python fetches in three stages; after each stage the pool is checked and
+    fetching stops if the WAJIB threshold is already met:
+
+      Stage 1: fetch 1→50. If pool ≥ POOL_MIN (7), continue to Stage 2 to reach POOL_TARGET (10).
+      Stage 2: fetch 51→70. If pool has POOL_MIN..POOL_TARGET items at 70 → STOP early, skip 71→100.
+      Stage 3: fetch 71→100. Only if pool < POOL_MIN at 70. If pool has 8/9 at 100 → STOP and output 8/9.
+
+    The STAGE constants live in `sources/base.py`. Scan counts are never disclosed in output.
+
+    Market is locked to US. Any value outside SUPPORTED_MARKETS returns FALLBACK_NEEDED
+    with error_code="MARKET_NOT_SUPPORTED".
     """
+    # Gate 0: market lock
+    market_norm = (market or "US").upper().strip()
+    if market_norm not in SUPPORTED_MARKETS:
+        return FetchResult(source, "unresolved", utc_now(), FetchStatus.FALLBACK_NEEDED.value,
+                           error_code="MARKET_NOT_SUPPORTED",
+                           error_detail=f"market={market!r}; only US is supported in this build")
+
     try:
         adapter = build_adapter(source)
     except ValueError as exc:
-        from rfx1427.models import utc_now
         return FetchResult(source, "unresolved", utc_now(), FetchStatus.FALLBACK_NEEDED.value,
                            error_code="UNSUPPORTED_SOURCE", error_detail=str(exc))
-    result = adapter.fetch(market=market, limit=limit)
-    return result
+
+    # Staged fetch: pull items in waves, stop when pool meets early-stop criteria.
+    # Each call returns up to the stage limit; the pool handed to AI grows 50 → 70 → 100.
+    #   Stage 1 (50):   if pool ≥ POOL_MIN (7), continue to Stage 2.
+    #   Stage 2 (70):   if pool has POOL_MIN..POOL_TARGET (7..10) → STOP, skip Stage 3.
+    #   Stage 3 (100):  only if pool < POOL_MIN at 70. If pool has 8/9 at 100 → STOP.
+    pool = adapter.fetch(market=market_norm, limit=STAGE_1_LIMIT)
+    if pool.status == FetchStatus.SUCCESS.value:
+        if len(pool.items) < POOL_MIN:
+            # Stage 2: pool still < 7, extend to 70
+            pool = adapter.fetch(market=market_norm, limit=STAGE_2_LIMIT)
+        if pool.status == FetchStatus.SUCCESS.value and POOL_MIN <= len(pool.items) <= POOL_TARGET:
+            # Early stop: pool meets WAJIB 7 target 10 at 70, skip 71→100
+            pass
+        elif pool.status == FetchStatus.SUCCESS.value and len(pool.items) < POOL_MIN:
+            # Stage 3: extend to 100 only if pool < 7 at 70
+            pool = adapter.fetch(market=market_norm, limit=STAGE_3_LIMIT)
+    # Hard cap at user's --limit
+    if pool.status == FetchStatus.SUCCESS.value and limit < STAGE_3_LIMIT:
+        pool.items = pool.items[:limit]
+        pool.items_after_dedup = min(pool.items_after_dedup, limit)
+    return pool
 
 
 def emit_jsonl(result: FetchResult, *, stream=sys.stdout) -> None:
@@ -44,19 +88,61 @@ def emit_jsonl(result: FetchResult, *, stream=sys.stdout) -> None:
                           "reason": result.error_code, "detail": result.error_detail}, ensure_ascii=False), file=stream)
 
 
+INTERACTIVE_PROFILE_ORDER = ["INTRADAY", "SCALPER", "SWING", "INVESTOR"]
+
+
+def run_interactive() -> int:
+    """Gate 0 + source picker using adaptive platform UI.
+
+    Uses the platform's native choice UI (arrow keys + Enter) when
+    available, else falls back to numbered text prompts. Market is
+    locked to US — no market question is asked.
+    """
+    from rfx1427.ui import choose_one
+
+    # Gate 0 Q1 — language is collected for the AI layer; Python keeps
+    # the value only for the confirmation line (it does not affect fetch).
+    language = choose_one(
+        "What language for output?",
+        ["English", "Bahasa Melayu", "Other"],
+        default="English",
+    )
+    # Gate 0 Q2 — trader profile drives downstream AI ranking.
+    profile = choose_one(
+        "What trader profile?",
+        INTERACTIVE_PROFILE_ORDER,
+        default="INTRADAY",
+    )
+    # Phase 1 source picker from the supported-source registry.
+    source = choose_one(
+        "Which news source?",
+        list(supported_sources()),
+        default="finviz",
+    )
+    print(f"Language: {language} | Profile: {profile} | Market: US (locked)", file=sys.stderr)
+    print("PROCEED → PHASE 1", file=sys.stderr)
+    result = run_phase1(source, "US", profile)
+    emit_jsonl(result)
+    return 0 if result.status == FetchStatus.SUCCESS.value else 2
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 1 Python fetcher")
     parser.add_argument("--list-sources", action="store_true", help="List all supported source names and exit")
-    parser.add_argument("--source", help="Listed source name or custom URL (required unless --list-sources)")
-    parser.add_argument("--market", default="US")
+    parser.add_argument("--source", help="Listed source name or custom URL (required unless --list-sources or --interactive)")
+    parser.add_argument("--market", default="US", help="Market focus (Gate 0 locked to US)")
     parser.add_argument("--profile", default="INTRADAY", choices=["SCALPER", "INTRADAY", "SWING", "INVESTOR"])
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--interactive", "-i", action="store_true",
+                        help="Interactive mode: pick language, profile, and source via adaptive choice UI (arrow keys + Enter when supported)")
     args = parser.parse_args()
     if args.list_sources:
         print("\n".join(supported_sources()))
         return 0
+    if args.interactive and not args.source:
+        return run_interactive()
     if not args.source:
-        parser.error("the following arguments are required: --source (or pass --list-sources)")
+        parser.error("the following arguments are required: --source (or pass --list-sources or --interactive)")
     result = run_phase1(args.source, args.market, args.profile, max(1, min(args.limit, 100)))
     emit_jsonl(result)
     return 0 if result.status == FetchStatus.SUCCESS.value else 2

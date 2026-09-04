@@ -87,6 +87,6 @@ Sesi tamat.
 
 1. Never skip a required table or section
 2. Never invent data. Use NOT AVAILABLE, BLOCKED, or UNVERIFIED when data is missing
-3. Never auto-advance phases. Always stop and wait for explicit user opt-in
+3. Phase 3 is mandatory (auto-proceeds after Phase 2); Phase 4 only on user request
 4. Keep the exact markdown structure, bold labels, and stop phrases shown above
 5. Never include buy/sell recommendations, entry prices, stop-loss levels, position sizing, or guaranteed targets

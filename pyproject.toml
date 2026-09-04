@@ -13,10 +13,13 @@ dependencies = [
   "lxml>=5.0,<6",
   "feedparser>=6.0,<7",
   "yfinance>=0.2,<1",
+  "rich>=13.0,<14",
 ]
 
 [project.scripts]
 rfx1427-phase1 = "rfx1427.phase1:main"
+rfx1427-phase2 = "rfx1427.phase2:main"
+rfx1427-phase3 = "rfx1427.phase3:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

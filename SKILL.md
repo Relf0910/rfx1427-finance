@@ -1,6 +1,6 @@
 ---
 name: rfx1427-finance
-description: AI financial news scanner and analysis framework version 4.5 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Every phase has a layered fallback for Python failure (Python fetch → alternate method → official failure label). Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR only on explicit opt-in. Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
+description: AI financial news scanner and analysis framework version 4.7.1 where Python works directly with the AI across Phase 1, Phase 2 and Phase 3 — Python brings the AI to the news source and to the market-data and SEC EDGAR tools and assists in real time, while the AI judges. Runs on Claude Code / claude.ai (Anthropic) and OpenAI; other AI platforms supported. Every phase has a layered fallback for Python failure (Python fetch → alternate method → official failure label). Phase 1 reads the best 7 positive opportunities per trader profile in one pass; Phase 2 performs deep analysis with a user-selected Primary Tool (NO SEC); Phase 3 verifies via SEC EDGAR automatically after Phase 2 (mandatory). Supports Finviz (default) or 9 verified free alternative sources or a custom source, with a 3-layer hybrid fallback (Python fetch → AI web_search → BLOCKED). Use only when user requests financial news scanning, opportunity filtering, explicit reference to this skill name, or the Intake / Phase 1 / Phase 2 / Phase 3 / Phase 4 workflow. Do not use for buy/sell advice, trade execution, continuous monitoring, watchlists, price alerts, portfolio management, or general finance questions without ticker and news scanning scope. Output is read-only analysis, not a trading advisor.
 ---
 
 # RFX1427 Finance
@@ -25,7 +25,7 @@ PHASE 2 — DEEP ANALYSIS (Primary Tool Only, NO SEC)
 STOP — WAIT FOR USER
     │
     ▼
-PHASE 3 — SEC EDGAR VERIFICATION (Opt-in Only)
+PHASE 3 — SEC EDGAR VERIFICATION (Mandatory)
     │
     ▼
 STOP — WAIT FOR USER
@@ -41,7 +41,7 @@ END
 
 - **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
 - **NO FABRICATION** — never fabricate news, ticker, price, volume, financial figures, filing, rating, level, or source access. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED` when needed
-- **OPT-IN ONLY** — Phase 2 on user selection. Phase 3 SEC Verification only on explicit user opt-in. Phase 4 only on user request
+- **OPT-IN ONLY** — Phase 2 on user selection. **Phase 3 SEC Verification is mandatory** (auto-proceeds after Phase 2). Phase 4 only on user request
 - **NO AUTOMATIC PHASE TRANSITION** — phase cannot jump without permission
 - **NO LOOP, NO MONITOR, NO AUTO-PROCEED** — each session is fresh
 - **ONE QUESTION AT A TIME** for Intake
@@ -52,6 +52,16 @@ END
 - User interaction: Bahasa Melayu
 - Code, identifiers, error states, table headers, status enum: English (verbatim from framework)
 - Report output (Phase 1/2/3/4): Language according to user `output_language` selection (English, Bahasa Melayu, Other)
+
+## Platforms
+
+| Agent | File | Status |
+|-------|------|--------|
+| Claude Code / claude.ai | `agents/claude.yaml` | ✅ Primary |
+| OpenAI | `agents/openai.yaml` | ✅ Supported |
+| Other AI platforms | Skill interface (agent-agnostic) | ✅ Compatible |
+
+The skill framework is agent-agnostic. Python fetch layer (`phase1.py`, `phase2.py`, `phase3.py`) and locked output templates are platform-independent.
 
 ## Global Flow (Session Architecture)
 
@@ -71,7 +81,7 @@ PHASE 2 — DEEP ANALYSIS (Primary Tool Only, NO SEC)
 STOP — WAIT FOR USER
     │
     ▼
-PHASE 3 — SEC EDGAR VERIFICATION (Opt-in Only)
+PHASE 3 — SEC EDGAR VERIFICATION (Mandatory)
     │
     ▼
 STOP — WAIT FOR USER
@@ -114,7 +124,7 @@ END
 8. Phase 2 requires explicit opt-in.
 9. User chooses Primary Tool (Google Finance default).
 10. Phase 2 uses Primary Tool ONLY. No SEC in Phase 2.
-11. Phase 3 is SEPARATE phase for SEC EDGAR (opt-in only).
+11. Phase 3 is a SEPARATE phase for SEC EDGAR, mandatory after Phase 2.
 12. SEC EDGAR is NOT mandatory in Phase 2.
 13. Fetch before analysis.
 14. No fabricated data.
@@ -122,7 +132,7 @@ END
 16. Missing data = Not Available.
 17. Rejected mechanism = Skip.
 18. Low final confidence = Skip.
-19. Phase 3 only if user explicitly opt-in for SEC verification.
+19. Phase 3 runs automatically after Phase 2 — mandatory, no opt-in needed.
 20. Phase 4 only when user asks.
 21. No automatic phase transition.
 22. No loop.
@@ -141,7 +151,7 @@ END
 35. Phase 1 is POSITIVE-ONLY. Negative, mixed, and neutral items are discarded. Only positive opportunities are reported.
 36. Phase 1 outputs 7–10 positive opportunities — WAJIB 7, target 10, profile-adaptive, staged 50→70→100 with early-stop. Stage 1 read 1→50; if ≥7 qualifying, continue expanding pool up to 10. Stage 2 read 51→70; if pool has 7–10 at 70, STOP (skip 71–100). Stage 3 read 71→100; if pool has 8/9 at 100, STOP and output 8/9. Python expands window (pagination/alternate source + Layer 2 web_search) only to assemble pool; hard gates never lowered, fabrication never allowed. 7–10 are ranked profile-adaptively: base Materiality > Confidence > Horizon Fit > Catalyst clarity > Freshness, with profile weighting (SCALPER freshness <60m, INTRADAY intraday-catalyst, SWING guidance/sector, INVESTOR structural/M&A > freshness). Rare fail-safe (<7 even after all layers): output X with disclaimer; do NOT fabricate.
 37. Python works directly with the AI inside Phase 2 (unified flow). Python fetches market data from the selected Primary Tool and prepares it; the AI analyzes, verifies the catalyst, assesses timing fit, identifies price levels, and applies the confidence gate. Python does NOT analyze or judge; the AI judges. Primary Tool remains the benchmark (NO SEC in Phase 2).
-38. Python works directly with the AI inside Phase 3 (unified flow, opt-in only). Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and assigns VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE. Python does NOT verify or label; the AI judges.
+38. Python works directly with the AI inside Phase 3 (unified flow, mandatory after Phase 2). Python fetches and parses SEC EDGAR filings; the AI verifies against Phase 2 claims and assigns VERIFIED / UNVERIFIED — SEC DATA NOT AVAILABLE. Python does NOT verify or label; the AI judges.
 39. Python failure is handled by a layered fallback in EVERY phase. In Phase 2, fallback is an alternate market-data method; in Phase 3, fallback is an alternate SEC access method (NOT web_search). Python ALWAYS tries the primary method first. The official failure label is ONLY declared when both methods fail. Python does NOT judge; the AI applies the label.
 
 ---
@@ -172,9 +182,9 @@ END
 
 ---
 
-## Gate 0 — Intake (3 Questions)
+## Gate 0 — Intake (2 Questions, Market Locked to US)
 
-Ask ONE at a time.
+Ask ONE at a time. Market is fixed to **US** (no question asked).
 
 ### Intake Presentation Mode — ADAPTIVE (no content change)
 
@@ -182,7 +192,7 @@ Present each intake question using the platform's native choice/option UI when t
 platform provides one (e.g. selectable buttons, arrow-key + Enter menus, option panels).
 This lets the user answer with the arrow keys and Enter instead of typing manually.
 
-- IF the current AI platform supports an interactive choice/option UI → render Q1/Q2/Q3
+- IF the current AI platform supports an interactive choice/option UI → render Q1/Q2
   as native selectable choices (arrow keys + Enter). Ask one question at a time.
 - IF the platform does NOT provide such a UI → fall back to the manual text prompts below
   (list options as `[English] [Bahasa Melayu] [Other]` and let the user type).
@@ -197,12 +207,12 @@ This lets the user answer with the arrow keys and Enter instead of typing manual
 - [Scalper] [Intraday] [Swing] [Investor]
 - → record: `trader_profile`
 
-**Q3:** "What market focus?" — (adaptive: use native choice UI if available, else type)
-- [US] [Singapore] [Malaysia] [Other]
-- → record: `market`
+**Market (locked):** `US` — no question. Recorded automatically. Selecting non-US markets
+is not supported in this build; `phase1.py` returns `FALLBACK_NEEDED` with
+`error_code="MARKET_NOT_SUPPORTED"` for any other value.
 
 [INTAKE COMPLETE]
-"Language: X | Profile: X | Market: X"
+"Language: X | Profile: X | Market: US (locked)"
 → PROCEED TO PHASE 1
 
 ## Profile Definitions
@@ -900,7 +910,7 @@ WAIT FOR USER
 
 ---
 
-## Phase 3 — SEC EDGAR Verification (Python + AI Unified, Opt-in Only)
+## Phase 3 — SEC EDGAR Verification (Python + AI Unified, Mandatory)
 
 ### Phase 3 Concept
 
@@ -920,7 +930,7 @@ Same principle as Phase 1 and Phase 2: **Python works directly with the AI insid
 ### Python + AI Streaming Flow (Phase 3, ONE PASS)
 
 ```text
-[User explicitly opts in to SEC EDGAR verification]
+[Phase 3 auto-proceeds after Phase 2]
     │
     ▼
 [Python fetches + parses SEC EDGAR filing for ticker 1..N]
@@ -1010,7 +1020,7 @@ STEP S3 — VERIFY (AI judges, ONE PASS)
 
 ### Phase 3 Steps
 
-**Trigger:** User explicitly asks for SEC EDGAR verification.
+**Trigger:** Phase 2 completes — Phase 3 auto-proceeds (mandatory).
 **Step 3A — Python-Assisted SEC Fetch:** Python accesses SEC EDGAR for each ticker and fetches + parses official filings. Check: Revenue, Net Income/EPS, Total Debt, Cash Flow, Insider Transactions (Form 4), Outstanding Shares, Material Events (8-K). If Python fails → use the layered fallback (alternate SEC method, then `BLOCKED — SEC EDGAR COULD NOT BE ACCESSED` → `UNVERIFIED — SEC DATA NOT AVAILABLE`).
 **Step 3B — Label Results (AI judges):** Python delivers the parsed filings; AI compares against Phase 2 and assigns VERIFIED if the SEC filing confirms data. UNVERIFIED — SEC DATA NOT AVAILABLE if data cannot be retrieved.
 
@@ -1020,7 +1030,7 @@ STEP S3 — VERIFY (AI judges, ONE PASS)
 
 ```markdown
 **PHASE 3 — SEC EDGAR VERIFICATION**
-(Opt-in sahaja | Akses: [DATE TIME (UTC+8)])
+(Mandatory | Akses: [DATE TIME (UTC+8)])
 
 ---
 
@@ -1180,7 +1190,7 @@ ESTIMATE
 # OPPORTUNITY LIFECYCLE
 # ====================================================================
 
-`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → PHASE 1 REPORT → USER OPT-IN → PRIMARY DATA FETCH → PHASE 2 REPORT → USER OPT-IN → SEC EDGAR FETCH → PHASE 3 REPORT → USER REQUEST → PHASE 4 REPORT → END`
+`NEWS → TICKER FILTER → PROFILE FILTER → FACT EXTRACTION → MATERIALITY → CONFIDENCE → HORIZON FIT → NOISE GATE → PHASE 1 REPORT → STOP → PHASE 2 REPORT → STOP → SEC EDGAR FETCH → PHASE 3 REPORT → STOP → USER REQUEST → PHASE 4 REPORT → END`
 
 Any hard gate fails → `STOP / SKIP`
 
@@ -1210,7 +1220,7 @@ Any hard gate fails → `STOP / SKIP`
 # ====================================================================
 
 - **VERSION 4.0** — Locked Output Templates added for all 4 phases
-- **Authority Gate** — Primary Tool selected by user (Google Finance / Finviz / MarketBeat / Skip). SEC EDGAR is separate opt-in phase
+- **Authority Gate** — Primary Tool selected by user. SEC EDGAR is a separate mandatory phase
 - **Evidence Integrity Gate** — every important claim must be supported by real data (source URL, filing reference, or label `NOT AVAILABLE` / `UNVERIFIED` / `BLOCKED`)
 - **Completion Gate** — phase only complete after every step in reference is done
 

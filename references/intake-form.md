@@ -1,10 +1,10 @@
 # Intake Form (Gate 0)
 
-Source: Framework v3.1
+Source: Framework v4.7.1 — Gate 0 locked to 2 questions (Language + Trader Profile); Market fixed to US
 
 ## Overview
 
-Intake has **3 questions only**. Ask **one at a time** — do not ask all at once (Rule 1). If any field is incomplete, **WAIT** (Rule 2).
+Intake has **2 questions only**. Ask **one at a time** — do not ask all at once (Rule 1). If any field is incomplete, **WAIT** (Rule 2). Market is locked to **US** — no market selection step.
 
 ## Presentation Mode (Adaptive)
 
@@ -41,27 +41,16 @@ Options:
 
 Record as: `trader_profile`
 
-## Q3 — Market Focus
+## Market — Locked
 
-Ask:
-
-> "What market focus?"
-
-Options:
-
-- US
-- Singapore
-- Malaysia
-- Other
-
-Record as: `market`
+Market is fixed to `US` (stocks US only). No question is asked. Record as: `market = "US"`.
 
 ## Intake Complete
 
-After all three fields are complete:
+After both fields are complete:
 
 ```text
-Language: X | Profile: X | Market: X
+Language: X | Profile: X | Market: US (locked)
 ```
 
 Then:
@@ -78,4 +67,4 @@ WAIT
 
 ## Hard Gate
 
-Do not proceed to Phase 1 if any question is unanswered. Repeat the unanswered question, one at a time.
+Do not proceed to Phase 1 if any question is unanswered or if market is not `US`. Repeat the unanswered question, one at a time.

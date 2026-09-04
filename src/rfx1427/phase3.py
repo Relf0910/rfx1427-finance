@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import sys
 import time
 from dataclasses import asdict, dataclass, field
@@ -202,16 +201,17 @@ def fetch_with_fallback(ticker: str, user_agent: str) -> SecResult:
     result = primary.fetch(ticker)
     if result.sec_status == "SUCCESS":
         return result
-    # Alternate remains official SEC: submissions endpoint via www.sec.gov with the same CIK.
-    # A result that cannot be re-resolved remains explicitly UNVERIFIED; no web-search fallback.
+    # There is no true alternate SEC source — both calls hit the same official
+    # data.sec.gov endpoints. So the "alternate" attempt only re-checks whether the
+    # ticker/CIK is resolvable; it never claims a second data source succeeded.
+    # The result stays UNVERIFIED and no fabricated filings are propagated.
     alternate = SecClient(user_agent, min_interval=0.2)
     try:
         cik, company = alternate.resolve(ticker)
         alt = alternate.submissions(cik)
         if alt.get("filings", {}).get("recent"):
             result.company, result.cik = company, cik
-            result.collection_method = "python_sec_alternate"
-            result.error_detail = f"primary={result.error_code}; alternate_available_but_parse_failed"
+            result.error_detail = f"primary={result.error_code}; alternate_resolvable_but_fetch_failed"
     except SecAccessError as exc:
         result.error_detail = f"primary={result.error_code}; alternate={exc.code}"
     result.sec_status = "UNVERIFIED"
@@ -227,12 +227,46 @@ def emit_jsonl(results: Iterable[SecResult], *, stream=sys.stdout) -> None:
         print(json.dumps({"type": "phase3_sec_data", **result.to_dict()}, ensure_ascii=False), file=stream)
 
 
+def _tickers_from_opportunities(path: str) -> list[str]:
+    """Extract unique tickers from a Phase 1 JSONL file."""
+    tickers: set[str] = set()
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+                ticker = obj.get("ticker") or obj.get("TICKER")
+                if ticker and str(ticker).strip():
+                    tickers.add(str(ticker).strip().upper())
+            except (json.JSONDecodeError, OSError):
+                continue
+    return sorted(tickers)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="RFX1427 Finance Phase 3 SEC EDGAR fetcher")
-    parser.add_argument("--tickers", nargs="+", required=True)
+    parser.add_argument("--tickers", nargs="+", help="One or more tickers to verify (mutually exclusive with --opportunities)")
+    parser.add_argument("--opportunities", help="Phase 1 JSONL file — tickers auto-detected (mutually exclusive with --tickers)")
     parser.add_argument("--user-agent", required=True, help="Application name and contact email")
     args = parser.parse_args()
-    results = run_phase3(args.tickers, args.user_agent)
+
+    if args.tickers and args.opportunities:
+        parser.error("use only one of --tickers or --opportunities, not both")
+
+    if not args.tickers and not args.opportunities:
+        parser.error("one of --tickers or --opportunities is required")
+
+    if args.opportunities:
+        tickers = _tickers_from_opportunities(args.opportunities)
+    else:
+        tickers = [t.strip().upper() for t in args.tickers if t.strip()]
+
+    if not tickers:
+        parser.error("no tickers found in --opportunities file")
+
+    results = run_phase3(tickers, args.user_agent)
     emit_jsonl(results)
     return 0
 

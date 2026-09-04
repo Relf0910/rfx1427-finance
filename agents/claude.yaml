@@ -1,0 +1,4 @@
+interface:
+  display_name: "RFX1427 Finance"
+  short_description: "Scanner berita kewangan dengan verification SEC EDGAR"
+  default_prompt: "Use $rfx1427-finance to scan a chosen news source and identify material opportunities for a specific trader profile and market focus, with optional opt-in deep analysis verified against SEC EDGAR. Status: DRAFT until the user explicitly chooses the Ready-to-Package option (all formats with or without install). Do not auto-install, publish, or replace any other skill without that explicit packaging/install choice. Authority Gate: SEC EDGAR is mandatory verification partner; Primary Tool selected by user."
