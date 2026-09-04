@@ -42,7 +42,7 @@ END
 - **Source Fact → Verification → AI Analysis → Estimate** — four layers always distinguished
 - **NO FABRICATION** — never fabricate news, ticker, price, volume, financial figures, filing, rating, level, or source access. Use `NOT AVAILABLE`, `UNVERIFIED`, or `BLOCKED` when needed
 - **OPT-IN ONLY** — Phase 2 on user selection. **Phase 3 SEC Verification is mandatory** (auto-proceeds after Phase 2). Phase 4 only on user request
-- **NO AUTOMATIC PHASE TRANSITION** — phase cannot jump without permission
+- **NO AUTOMATIC PHASE TRANSITION** — Phase 1→2 and Phase 3→4 must wait for user; only Phase 2→3 is automatic (mandatory Phase 3)
 - **NO LOOP, NO MONITOR, NO AUTO-PROCEED** — each session is fresh
 - **ONE QUESTION AT A TIME** for Intake
 - **READ-ONLY ANALYSIS** — not a trading advisor. No buy/sell, entry, stop-loss, position sizing, or guaranteed target
@@ -326,27 +326,31 @@ STEP P6 — JSON ENVELOPE (recorded for audit)
 
 ### Source Library Map (Verified Free Sources)
 
-All sources below are **FREE and accessible** (verified by testing). The user selects one at Step 1A. Python uses the corresponding library.
+All sources below are **FREE and accessible**. The user selects one at Step 1A.
+All Phase 1 sources use the generic fetcher in `src/rfx1427/sources/base.py` —
+**`requests` + `BeautifulSoup4` for HTML pages, `feedparser` for RSS feeds** — no
+per-source libraries are installed or imported. `pip install -e .` brings in
+everything the framework needs.
 
 #### Tier 1 — Primary (Default)
 
-| Source | Python Library | Install Command | Access Method | Notes |
-|--------|---------------|-----------------|---------------|-------|
-| **Finviz** | `finvizfinance` | `pip install finvizfinance` | Scrape (HTML) | **DEFAULT SOURCE.** Most complete: news, screener, quotes. No API key needed. |
+| Source | Access Method | Notes |
+|--------|---------------|-------|
+| **Finviz** | HTML Scrape (`requests` + `BeautifulSoup4`) | **DEFAULT SOURCE.** Most complete: news, screener, quotes. No API key needed. |
 
 #### Tier 2 — Optional Alternatives (Free)
 
-| Source | Python Library | Install Command | Access Method | Notes |
-|--------|---------------|-----------------|---------------|-------|
-| Yahoo Finance | `yfinance` | `pip install yfinance` | API (free) | Stable, popular. News + price + fundamentals. No API key. |
-| Investing.com | `investpy` | `pip install investpy` | Scrape | Broad coverage: forex, stocks, commodities. Free. |
-| TradingView | `tradingview-scraper` | `pip install tradingview-scraper` | Scrape | Screener, ideas, community signals. |
-| StockTitan | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape (HTML) | Real-time ticker-focused news. |
-| PR Newswire | `feedparser` | `pip install feedparser` | RSS feed (free) | Official corporate press releases. |
-| GlobeNewswire | `feedparser` | `pip install feedparser` | RSS feed (free) | Official corporate press releases. |
-| Motley Fool | `feedparser` or `BeautifulSoup4` | `pip install feedparser` | RSS / Scrape | Stock analysis and commentary. |
-| Barchart | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape (with headers) | Market data + news. Needs User-Agent header. |
-| StockAnalysis.com | `requests` + `BeautifulSoup4` | `pip install requests beautifulsoup4` | Scrape | Fundamentals + news data. |
+| Source | Access Method | Notes |
+|--------|---------------|-------|
+| Yahoo Finance | RSS (`feedparser`) | News RSS feed. Price/fundamentals via `yfinance` are Phase 2 only (separate). |
+| Investing.com | HTML Scrape (`requests` + `BeautifulSoup4`) | Broad coverage: forex, stocks, commodities. Free. |
+| TradingView | HTML Scrape (`requests` + `BeautifulSoup4`) | Screener, ideas, community signals. |
+| StockTitan | HTML Scrape (`requests` + `BeautifulSoup4`) | Real-time ticker-focused news. |
+| PR Newswire | RSS (`feedparser`) | Official corporate press releases. |
+| GlobeNewswire | RSS (`feedparser`) | Official corporate press releases. |
+| Motley Fool | RSS / HTML Scrape (`feedparser` / `BeautifulSoup4`) | Stock analysis and commentary. |
+| Barchart | HTML Scrape (`requests` + `BeautifulSoup4`) | Market data + news. Needs User-Agent header. |
+| StockAnalysis.com | HTML Scrape (`requests` + `BeautifulSoup4`) | Fundamentals + news data. |
 
 #### Tier 3 — Custom Sources
 
@@ -386,13 +390,13 @@ All sources below are **FREE and accessible** (verified by testing). The user se
 | Noise removal | NONE — Python does not remove noise |
 | Judgement | NONE — Python never judges; the AI judges |
 
-### Source Data Notes (Verified on v4.5 Testing)
+### Source Data Notes (Verified on v4.7.1)
 
 Known response structures verified by live testing. Python must read these correctly; the AI still judges the content.
 
 | Source | Verified Structure | Parsing Note |
 |--------|-------------------|--------------|
-| Finviz news (`finvizfinance.news`) | `get_news()` returns dict with `news` and `blogs`, each a pandas DataFrame with columns `Date, Title, Source, Link` | Read rows from `d['news']` |
+| Finviz news (HTML) | Scraped via `requests` + `BeautifulSoup4`; news items parsed from `<a>` tags in the news table | Read `<a>` text and `href` attributes |
 | Yahoo Finance news (`yfinance`) | `Ticker.news` returns a list of dicts; **title is at `item['content']['title']`**, not `item['title']` | Access `content.title`; `pubDate` in `content` |
 | Yahoo Finance RSS via feedparser | `parse()` returns entries with `title` | Standard RSS |
 | PR Newswire RSS via feedparser | `parse()` returns 20 entries, `status` 200 | Standard RSS |
@@ -760,9 +764,8 @@ STEP D1 — TOOL SELECTION (AI asks user; Python executes)
   - Primary Tool: Google Finance (default) / Finviz / MarketBeat.
   - If Skip -> END SESSION.
   - Python uses the matching access method:
-      Google Finance / Yahoo -> yfinance
-      Finviz -> finvizfinance
-      MarketBeat / other -> requests + BeautifulSoup4
+      Google Finance / Yahoo -> yfinance (Phase 2 price data)
+      Finviz / MarketBeat / other -> requests + BeautifulSoup4
 
 STEP D2 — FETCH MARKET DATA (Python fetches per ticker)
   - For EVERY Phase 1 opportunity, Python fetches:
@@ -906,7 +909,7 @@ WAIT FOR USER
 ```
 
 > After the Ranking Summary, output exactly `STOP` then `WAIT FOR USER` on separate lines.
-> Do not proceed to Phase 3 unless the user explicitly opts in.
+> Phase 3 is mandatory — auto-proceeds after Phase 2 completes.
 
 ---
 
