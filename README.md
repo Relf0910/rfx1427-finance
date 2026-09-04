@@ -40,6 +40,8 @@ python -m rfx1427.phase1 --source finviz --market US --limit 20
 
 Or via installed entry-points: `rfx1427-phase1`, `rfx1427-phase2`, `rfx1427-phase3`.
 
+> **Python:** requires ≥3.10 · tested on 3.12 · Python 3.14 missing wheels for `pandas`/`lxml` (use 3.12).
+
 ## Gate 0 (intake)
 
 Two questions only, asked one at a time:
